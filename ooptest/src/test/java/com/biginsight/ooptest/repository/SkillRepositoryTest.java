@@ -50,6 +50,24 @@ public class SkillRepositoryTest {
         assertThat(savedSkill).isEqualTo(skill);
     }
 
+    @DisplayName("스킬 조회")
+    @Test
+    public void findSkill() {
+        // given
+        given(skillRepository.save(any(Skill.class))).willReturn(skill);
+        given(skillRepository.findById(any(Long.class))).willReturn(Optional.ofNullable(skill));
+
+        // when
+        Skill savedSkill = skillRepository.save(skill);
+        Skill foundSkill = skillRepository.findById(skill.getId()).get();
+
+        // then
+        then(skillRepository).should(times(1)).save(skill);
+        then(skillRepository).should(times(1)).findById(skill.getId());
+        assertThat(savedSkill).isEqualTo(foundSkill);
+    }
+
+
     private Skill buildSkill(CharacterSpecies characterSpecies) {
         return Skill.builder()
                 .id(1L)
