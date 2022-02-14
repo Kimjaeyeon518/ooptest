@@ -82,9 +82,9 @@ public class GameCharacterServiceImplTest {
         assertThat(wearWeaponGameCharacter.getId()).isEqualTo(savedGameCharacter.getId());
     }
 
-    @DisplayName("캐릭터 무기 착용(변경) 실패")
+    @DisplayName("캐릭터 무기 착용(변경) 실패(종족 불일치)")
     @Test
-    public void GameCharacterWearsWeaponFailed() {
+    public void GameCharacterWearsWeaponFailedBySpecies() {
         // given
         GameCharacter newWeaponHuman = buildHuman(buildWeapon(CharacterSpecies.OAK));
         Weapon weapon = buildWeapon(CharacterSpecies.OAK);
