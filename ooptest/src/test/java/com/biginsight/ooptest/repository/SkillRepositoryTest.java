@@ -73,7 +73,7 @@ public class SkillRepositoryTest {
                 .id(1L)
                 .characterSpecies(characterSpecies)
                 .name("new skill")
-                .requiredMp(20)
+                .requiredMp(20F)
                 .requiredLevel(10)
                 .effect("attackSpeed,+10")
                 .build();

@@ -68,7 +68,7 @@ public class GameCharacterRepositoryTest {
     private GameCharacter buildHuman(Weapon weapon) {
         return GameCharacter.builder()
                 .id(1L)
-                .level(1)
+                .level(20)
                 .hp(100F)
                 .mp(100F)
                 .attackPower(10F)

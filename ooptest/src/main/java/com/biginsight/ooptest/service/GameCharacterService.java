@@ -9,4 +9,5 @@ public interface GameCharacterService {
 
     GameCharacter addGameCharacter(GameCharacter gameCharacter);
     GameCharacterResponseDto wearWeapon(Long gameCharacterId, Long weaponId);
+    GameCharacterResponseDto useSkill(Long gameCharacterId, Long skillId);
 }

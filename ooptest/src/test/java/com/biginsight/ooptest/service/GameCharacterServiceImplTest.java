@@ -41,21 +41,6 @@ public class GameCharacterServiceImplTest {
     @Mock
     private SkillRepository skillRepository;
 
-    private GameCharacter buildHuman(Weapon weapon) {
-        return GameCharacter.builder()
-                .id(1L)
-                .level(1)
-                .hp(100F)
-                .mp(100F)
-                .attackPower(10F)
-                .attackSpeed(30F)
-                .defensePower(5F)
-                .avoidanceRate(20F)
-                .characterSpecies(CharacterSpecies.HUMAN)
-                .weapon(weapon)
-                .build();
-    }
-
     private GameCharacter gameCharacter;
 
     @BeforeEach
@@ -82,14 +67,14 @@ public class GameCharacterServiceImplTest {
     public void GameCharacterWearsWeaponSuccess() {
         // given
         GameCharacter newWeaponHuman = buildHuman(buildWeapon(CharacterSpecies.HUMAN));
-        Weapon newWeapon = buildWeapon(CharacterSpecies.HUMAN);
+        Weapon weapon = buildWeapon(CharacterSpecies.HUMAN);
         given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(newWeaponHuman);
         given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(newWeaponHuman));
-        given(weaponRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(newWeapon));
+        given(weaponRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(weapon));
 
         // when
         GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
-        GameCharacterResponseDto wearWeaponGameCharacter = gameCharacterService.wearWeapon(savedGameCharacter.getId(), buildWeapon(CharacterSpecies.HUMAN).getId());
+        GameCharacterResponseDto wearWeaponGameCharacter = gameCharacterService.wearWeapon(savedGameCharacter.getId(), weapon.getId());
 
         // then
         then(gameCharacterRepository).should(times(2)).save(any(GameCharacter.class));
@@ -102,10 +87,10 @@ public class GameCharacterServiceImplTest {
     public void GameCharacterWearsWeaponFailed() {
         // given
         GameCharacter newWeaponHuman = buildHuman(buildWeapon(CharacterSpecies.OAK));
-        Weapon newWeapon = buildWeapon(CharacterSpecies.OAK);
+        Weapon weapon = buildWeapon(CharacterSpecies.OAK);
         given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(newWeaponHuman);
         given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(newWeaponHuman));
-        given(weaponRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(newWeapon));
+        given(weaponRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(weapon));
 
         // when
         GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
@@ -119,21 +104,36 @@ public class GameCharacterServiceImplTest {
 
     @DisplayName("캐릭터 스킬 사용 성공")
     @Test
-    public void GameCharacterUsesSkillSuccess() {
+    public void GameCharacterUseSkillSuccess() {
         // given
-        GameCharacter newWeaponHuman = buildHuman(buildWeapon(CharacterSpecies.HUMAN));
-        given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(newWeaponHuman);
-        given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(newWeaponHuman));
-//        given(weaponRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(newWeapon));
+        Skill skill = buildSkill(CharacterSpecies.HUMAN);
+        given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(gameCharacter);
+        given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(gameCharacter));
+        given(skillRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(skill));
 
         // when
         GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
-        ApiException exception = assertThrows(ApiException.class,
-                () -> gameCharacterService.wearWeapon(savedGameCharacter.getId(), buildWeapon(CharacterSpecies.OAK).getId()));
+        GameCharacterResponseDto wearWeaponGameCharacter = gameCharacterService.useSkill(savedGameCharacter.getId(), skill.getId());
 
         // then
-        then(gameCharacterRepository).should(times(1)).save(any(GameCharacter.class));
-        assertThat(exception.getMessage()).isEqualTo(ApiErrorCode.INVALID_WEAPON_SPECIES.getMessage());
+        then(gameCharacterRepository).should(times(2)).save(any(GameCharacter.class));
+        assertThat(wearWeaponGameCharacter).isNotNull();
+        assertThat(wearWeaponGameCharacter.getId()).isEqualTo(savedGameCharacter.getId());
+    }
+
+    private GameCharacter buildHuman(Weapon weapon) {
+        return GameCharacter.builder()
+                .id(1L)
+                .level(30)
+                .hp(100F)
+                .mp(100F)
+                .attackPower(10F)
+                .attackSpeed(30F)
+                .defensePower(5F)
+                .avoidanceRate(20F)
+                .characterSpecies(CharacterSpecies.HUMAN)
+                .weapon(weapon)
+                .build();
     }
 
     private Weapon buildDefaultWeapon() {
@@ -158,6 +158,17 @@ public class GameCharacterServiceImplTest {
                 .characterSpecies(characterSpecies)
                 .name(name)
                 .effect(effect)
+                .build();
+    }
+
+    private Skill buildSkill(CharacterSpecies characterSpecies) {
+        return Skill.builder()
+                .id(1L)
+                .characterSpecies(characterSpecies)
+                .name("new skill")
+                .requiredMp(20F)
+                .requiredLevel(10)
+                .effect("attackSpeed,+10")
                 .build();
     }
 }
