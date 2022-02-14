@@ -32,9 +32,9 @@ public class GameCharacter {    // Character 로 사용 시 예약어 충돌 발
     @Enumerated(EnumType.STRING)
     private CharacterSpecies characterSpecies;     // 종족
 
-//    @OneToMany
-//    private List<Skill> skillList = new ArrayList();
-//
+    @OneToMany(mappedBy = "gameCharacter")
+    private List<GameCharacterSkill> gameCharacterSkillList = new ArrayList<>();
+
     @ManyToOne
     @JoinColumn(name = "weapon_id", nullable = false)
     private Weapon weapon;

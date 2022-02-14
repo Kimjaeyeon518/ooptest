@@ -6,6 +6,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 
 import javax.persistence.*;
+import java.util.ArrayList;
+import java.util.List;
 
 @Builder
 @Entity
@@ -24,4 +26,7 @@ public class Skill {
     private Float requiredMp;     // 소요 mp
     private Integer requiredLevel;  // 필요 레벨
     private String effect;          // 스킬 효과
+
+    @OneToMany(mappedBy = "skill")
+    private List<GameCharacterSkill> gameCharacters = new ArrayList<>();
 }
