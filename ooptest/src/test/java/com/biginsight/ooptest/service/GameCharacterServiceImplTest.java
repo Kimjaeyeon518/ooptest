@@ -2,12 +2,15 @@ package com.biginsight.ooptest.service;
 
 import com.biginsight.ooptest.domain.CharacterSpecies;
 import com.biginsight.ooptest.domain.GameCharacter;
+import com.biginsight.ooptest.domain.Skill;
 import com.biginsight.ooptest.domain.Weapon;
 import com.biginsight.ooptest.dto.request.GameCharacterRequestDto;
+import com.biginsight.ooptest.dto.response.GameCharacterResponseDto;
 import com.biginsight.ooptest.exception.ApiErrorCode;
 import com.biginsight.ooptest.exception.ApiException;
 import com.biginsight.ooptest.exception.CommonResponse;
 import com.biginsight.ooptest.repository.GameCharacterRepository;
+import com.biginsight.ooptest.repository.SkillRepository;
 import com.biginsight.ooptest.repository.WeaponRepository;
 import com.biginsight.ooptest.serviceImpl.GameCharacterServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -35,7 +38,8 @@ public class GameCharacterServiceImplTest {
     private GameCharacterRepository gameCharacterRepository;
     @Mock
     private WeaponRepository weaponRepository;
-
+    @Mock
+    private SkillRepository skillRepository;
 
     private GameCharacter buildHuman(Weapon weapon) {
         return GameCharacter.builder()
@@ -73,7 +77,7 @@ public class GameCharacterServiceImplTest {
         assertThat(savedGameCharacter).isEqualTo(gameCharacter);
     }
 
-    @DisplayName("캐릭터 무기 착용(변경) 성공")
+    @DisplayName("캐릭터 무기 착용 성공")
     @Test
     public void GameCharacterWearsWeaponSuccess() {
         // given
@@ -85,11 +89,12 @@ public class GameCharacterServiceImplTest {
 
         // when
         GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
-        GameCharacter wearWeaponGameCharacter = gameCharacterService.wearWeapon(savedGameCharacter.getId(), buildWeapon(CharacterSpecies.HUMAN).getId());
+        GameCharacterResponseDto wearWeaponGameCharacter = gameCharacterService.wearWeapon(savedGameCharacter.getId(), buildWeapon(CharacterSpecies.HUMAN).getId());
 
         // then
         then(gameCharacterRepository).should(times(2)).save(any(GameCharacter.class));
-        assertThat(wearWeaponGameCharacter).isEqualTo(newWeaponHuman);
+        assertThat(wearWeaponGameCharacter).isNotNull();
+        assertThat(wearWeaponGameCharacter.getId()).isEqualTo(savedGameCharacter.getId());
     }
 
     @DisplayName("캐릭터 무기 착용(변경) 실패")
@@ -101,6 +106,25 @@ public class GameCharacterServiceImplTest {
         given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(newWeaponHuman);
         given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(newWeaponHuman));
         given(weaponRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(newWeapon));
+
+        // when
+        GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
+        ApiException exception = assertThrows(ApiException.class,
+                () -> gameCharacterService.wearWeapon(savedGameCharacter.getId(), buildWeapon(CharacterSpecies.OAK).getId()));
+
+        // then
+        then(gameCharacterRepository).should(times(1)).save(any(GameCharacter.class));
+        assertThat(exception.getMessage()).isEqualTo(ApiErrorCode.INVALID_WEAPON_SPECIES.getMessage());
+    }
+
+    @DisplayName("캐릭터 스킬 사용 성공")
+    @Test
+    public void GameCharacterUsesSkillSuccess() {
+        // given
+        GameCharacter newWeaponHuman = buildHuman(buildWeapon(CharacterSpecies.HUMAN));
+        given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(newWeaponHuman);
+        given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(newWeaponHuman));
+//        given(weaponRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(newWeapon));
 
         // when
         GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
@@ -127,7 +151,7 @@ public class GameCharacterServiceImplTest {
 
     private Weapon buildWeapon(CharacterSpecies characterSpecies) {
         String name = "Short sword";
-        String effect = "attackPower,+5";
+        String effect = "attackPower,-5%";
 
         return Weapon.builder()
                 .id(2L)
