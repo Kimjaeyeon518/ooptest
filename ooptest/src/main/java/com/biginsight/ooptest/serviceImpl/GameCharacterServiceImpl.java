@@ -3,6 +3,8 @@ package com.biginsight.ooptest.serviceImpl;
 import com.biginsight.ooptest.domain.GameCharacter;
 import com.biginsight.ooptest.domain.Weapon;
 import com.biginsight.ooptest.dto.request.GameCharacterRequestDto;
+import com.biginsight.ooptest.exception.ApiErrorCode;
+import com.biginsight.ooptest.exception.ApiException;
 import com.biginsight.ooptest.repository.GameCharacterRepository;
 import com.biginsight.ooptest.repository.WeaponRepository;
 import com.biginsight.ooptest.service.GameCharacterService;
@@ -27,10 +29,14 @@ public class GameCharacterServiceImpl implements GameCharacterService {
     @Override
     public GameCharacter wearWeapon(Long gameCharacterId, Long weaponId) {
         GameCharacter gameCharacter = gameCharacterRepository.findById(gameCharacterId)
-                .orElseThrow(NullPointerException::new);
+                .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_GAMECHARACTER));
 
         Weapon weapon = weaponRepository.findById(weaponId)
-                .orElseThrow(NullPointerException::new);
+                .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_WEAPON));
+
+        // 캐릭터 종족과 무기 종족이 불일치할 경우
+        if(!gameCharacter.getCharacterSpecies().equals(weapon.getCharacterSpecies()))
+            throw new ApiException(ApiErrorCode.INVALID_WEAPON_SPECIES);
 
         gameCharacter.wearWeapon(weapon);
 
