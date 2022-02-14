@@ -95,7 +95,7 @@ public class GameCharacterServiceImplTest {
         // when
         GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
         ApiException exception = assertThrows(ApiException.class,
-                () -> gameCharacterService.wearWeapon(savedGameCharacter.getId(), buildWeapon(CharacterSpecies.OAK).getId()));
+                () -> gameCharacterService.wearWeapon(savedGameCharacter.getId(), weapon.getId()));
 
         // then
         then(gameCharacterRepository).should(times(1)).save(any(GameCharacter.class));
@@ -106,7 +106,7 @@ public class GameCharacterServiceImplTest {
     @Test
     public void GameCharacterUseSkillSuccess() {
         // given
-        Skill skill = buildSkill(CharacterSpecies.HUMAN);
+        Skill skill = buildSkill(CharacterSpecies.HUMAN, 10F, 10);
         given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(gameCharacter);
         given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(gameCharacter));
         given(skillRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(skill));
@@ -119,6 +119,44 @@ public class GameCharacterServiceImplTest {
         then(gameCharacterRepository).should(times(2)).save(any(GameCharacter.class));
         assertThat(wearWeaponGameCharacter).isNotNull();
         assertThat(wearWeaponGameCharacter.getId()).isEqualTo(savedGameCharacter.getId());
+    }
+
+    @DisplayName("캐릭터 스킬 사용 실패(마나 부족)")
+    @Test
+    public void GameCharacterUseSkillFailedByMp() {
+        // given
+        Skill skill = buildSkill(CharacterSpecies.HUMAN, 1000F, 10);
+        given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(gameCharacter);
+        given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(gameCharacter));
+        given(skillRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(skill));
+
+        // when
+        GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
+        ApiException exception = assertThrows(ApiException.class,
+                () -> gameCharacterService.useSkill(savedGameCharacter.getId(),skill.getId()));
+
+        // then
+        then(gameCharacterRepository).should(times(1)).save(any(GameCharacter.class));
+        assertThat(exception.getMessage()).isEqualTo(ApiErrorCode.NOT_ENOUGH_MP.getMessage());
+    }
+
+    @DisplayName("캐릭터 스킬 사용 실패(레벨 부족)")
+    @Test
+    public void GameCharacterUseSkillFailedByLevel() {
+        // given
+        Skill skill = buildSkill(CharacterSpecies.HUMAN, 10F, 1000);
+        given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(gameCharacter);
+        given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(gameCharacter));
+        given(skillRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(skill));
+
+        // when
+        GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
+        ApiException exception = assertThrows(ApiException.class,
+                () -> gameCharacterService.useSkill(savedGameCharacter.getId(),skill.getId()));
+
+        // then
+        then(gameCharacterRepository).should(times(1)).save(any(GameCharacter.class));
+        assertThat(exception.getMessage()).isEqualTo(ApiErrorCode.NOT_ENOUGH_LEVEL.getMessage());
     }
 
     private GameCharacter buildHuman(Weapon weapon) {
@@ -161,13 +199,13 @@ public class GameCharacterServiceImplTest {
                 .build();
     }
 
-    private Skill buildSkill(CharacterSpecies characterSpecies) {
+    private Skill buildSkill(CharacterSpecies characterSpecies, Float requiredMp, Integer requiredLevel) {
         return Skill.builder()
                 .id(1L)
                 .characterSpecies(characterSpecies)
                 .name("new skill")
-                .requiredMp(20F)
-                .requiredLevel(10)
+                .requiredMp(requiredMp)
+                .requiredLevel(requiredLevel)
                 .effect("attackSpeed,+10")
                 .build();
     }
