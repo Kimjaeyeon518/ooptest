@@ -1,20 +1,20 @@
 package com.biginsight.ooptest.serviceImpl;
 
 import com.biginsight.ooptest.domain.GameCharacter;
+import com.biginsight.ooptest.domain.GameCharacterSkill;
 import com.biginsight.ooptest.domain.Skill;
 import com.biginsight.ooptest.domain.Weapon;
-import com.biginsight.ooptest.dto.request.GameCharacterRequestDto;
 import com.biginsight.ooptest.dto.response.GameCharacterResponseDto;
+import com.biginsight.ooptest.dto.response.GameCharacterSkillResponseDto;
 import com.biginsight.ooptest.exception.ApiErrorCode;
 import com.biginsight.ooptest.exception.ApiException;
 import com.biginsight.ooptest.repository.GameCharacterRepository;
+import com.biginsight.ooptest.repository.GameCharacterSkillRepository;
 import com.biginsight.ooptest.repository.SkillRepository;
 import com.biginsight.ooptest.repository.WeaponRepository;
 import com.biginsight.ooptest.service.GameCharacterService;
-import com.biginsight.ooptest.service.WeaponService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestBody;
 
 import javax.transaction.Transactional;
 
@@ -26,6 +26,7 @@ public class GameCharacterServiceImpl implements GameCharacterService {
     private final GameCharacterRepository gameCharacterRepository;
     private final WeaponRepository weaponRepository;
     private final SkillRepository skillRepository;
+    private final GameCharacterSkillRepository gameCharacterSkillRepository;
 
 
     @Override
@@ -71,18 +72,10 @@ public class GameCharacterServiceImpl implements GameCharacterService {
         Skill findSkill = skillRepository.findById(skillId)
                 .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_WEAPON));
 
-        // 캐릭터 종족과 스킬 종족이 불일치할 경우
-        if(!findGameCharacter.getCharacterSpecies().equals(findSkill.getCharacterSpecies()))
-            throw new ApiException(ApiErrorCode.INVALID_WEAPON_SPECIES);
-
         // 캐릭터의 마나가 부족할 경우
-        if(findGameCharacter.getMp() < findSkill.getRequiredMp())
+        if (findGameCharacter.getMp() < findSkill.getRequiredMp())
             throw new ApiException(ApiErrorCode.NOT_ENOUGH_MP);
 
-        // 캐릭터의 레벨이 스킬 사용 제한 레벨보다 낮을 경우
-        if(findGameCharacter.getLevel() < findSkill.getRequiredLevel())
-            throw new ApiException(ApiErrorCode.NOT_ENOUGH_LEVEL);
-        
         GameCharacter gameCharacter = GameCharacter.builder()
                 .id(findGameCharacter.getId())
                 .level(findGameCharacter.getLevel())
@@ -101,6 +94,36 @@ public class GameCharacterServiceImpl implements GameCharacterService {
         return returnGameCharacterResponse(savedGameCharacter);
     }
 
+    @Override
+    public GameCharacterSkillResponseDto getSkill(Long gameCharacterId, Long skillId) {
+        GameCharacter findGameCharacter = gameCharacterRepository.findById(gameCharacterId)
+                .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_GAMECHARACTER));
+
+        Skill findSkill = skillRepository.findById(skillId)
+                .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_WEAPON));
+
+        // 캐릭터 종족과 스킬 종족이 불일치할 경우
+        if (!findGameCharacter.getCharacterSpecies().equals(findSkill.getCharacterSpecies()))
+            throw new ApiException(ApiErrorCode.INVALID_WEAPON_SPECIES);
+
+        // 캐릭터의 레벨이 스킬 사용 제한 레벨보다 낮을 경우
+        if (findGameCharacter.getLevel() < findSkill.getRequiredLevel())
+            throw new ApiException(ApiErrorCode.NOT_ENOUGH_LEVEL);
+
+        GameCharacterSkill gameCharacterSkill = GameCharacterSkill.builder()
+                .gameCharacter(findGameCharacter)
+                .skill(findSkill)
+                .build();
+        
+        GameCharacterSkill savedGameCharacterSkill = gameCharacterSkillRepository.save(gameCharacterSkill);
+        
+        // 양방향매핑
+        gameCharacterRepository.save(findGameCharacter);
+        skillRepository.save(findSkill);
+
+        return returnGameCharacterSkillResponse(savedGameCharacterSkill);
+    }
+
     public GameCharacterResponseDto returnGameCharacterResponse(GameCharacter savedGameCharacter) {
         return GameCharacterResponseDto.builder()
                 .id(savedGameCharacter.getId())
@@ -113,6 +136,14 @@ public class GameCharacterServiceImpl implements GameCharacterService {
                 .avoidanceRate(savedGameCharacter.getAvoidanceRate())
                 .characterSpecies(savedGameCharacter.getCharacterSpecies())
                 .weapon(savedGameCharacter.getWeapon())
+                .build();
+    }
+
+    public GameCharacterSkillResponseDto returnGameCharacterSkillResponse(GameCharacterSkill savedGameCharacterSkill) {
+        return GameCharacterSkillResponseDto.builder()
+                .id(savedGameCharacterSkill.getId())
+                .gameCharacter(savedGameCharacterSkill.getGameCharacter())
+                .skill(savedGameCharacterSkill.getSkill())
                 .build();
     }
 }

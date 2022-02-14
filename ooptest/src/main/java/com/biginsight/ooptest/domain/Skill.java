@@ -28,5 +28,5 @@ public class Skill {
     private String effect;          // 스킬 효과
 
     @OneToMany(mappedBy = "skill")
-    private List<GameCharacterSkill> gameCharacters = new ArrayList<>();
+    private List<GameCharacterSkill> gameCharacterSkillList = new ArrayList<>();
 }

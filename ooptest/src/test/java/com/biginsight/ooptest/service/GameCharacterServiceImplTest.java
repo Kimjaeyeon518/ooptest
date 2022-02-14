@@ -1,15 +1,12 @@
 package com.biginsight.ooptest.service;
 
-import com.biginsight.ooptest.domain.CharacterSpecies;
-import com.biginsight.ooptest.domain.GameCharacter;
-import com.biginsight.ooptest.domain.Skill;
-import com.biginsight.ooptest.domain.Weapon;
-import com.biginsight.ooptest.dto.request.GameCharacterRequestDto;
+import com.biginsight.ooptest.domain.*;
 import com.biginsight.ooptest.dto.response.GameCharacterResponseDto;
+import com.biginsight.ooptest.dto.response.GameCharacterSkillResponseDto;
 import com.biginsight.ooptest.exception.ApiErrorCode;
 import com.biginsight.ooptest.exception.ApiException;
-import com.biginsight.ooptest.exception.CommonResponse;
 import com.biginsight.ooptest.repository.GameCharacterRepository;
+import com.biginsight.ooptest.repository.GameCharacterSkillRepository;
 import com.biginsight.ooptest.repository.SkillRepository;
 import com.biginsight.ooptest.repository.WeaponRepository;
 import com.biginsight.ooptest.serviceImpl.GameCharacterServiceImpl;
@@ -40,6 +37,8 @@ public class GameCharacterServiceImplTest {
     private WeaponRepository weaponRepository;
     @Mock
     private SkillRepository skillRepository;
+    @Mock
+    private GameCharacterSkillRepository gameCharacterSkillRepository;
 
     private GameCharacter gameCharacter;
 
@@ -102,6 +101,37 @@ public class GameCharacterServiceImplTest {
         assertThat(exception.getMessage()).isEqualTo(ApiErrorCode.INVALID_WEAPON_SPECIES.getMessage());
     }
 
+    @DisplayName("캐릭터 스킬 습득 성공")
+    @Test
+    public void GameCharacterGetSkillSuccess() {
+        // given
+        Skill skill = buildSkill(CharacterSpecies.HUMAN, 10F, 10);
+        GameCharacterSkill gameCharacterSkill = buildGameCharacterSkill(gameCharacter, skill);
+        given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(gameCharacter);
+        given(skillRepository.save(any(Skill.class))).willReturn(skill);
+        given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(gameCharacter));
+        given(skillRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(skill));
+        given(gameCharacterSkillRepository.save(any(GameCharacterSkill.class))).willReturn(gameCharacterSkill);
+
+        // when
+        GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
+        Skill savedSkill = skillRepository.save(skill);
+        GameCharacterSkillResponseDto gameCharacterSkillResponseDto = gameCharacterService.getSkill(savedGameCharacter.getId(), savedSkill.getId());
+
+        // 양방향 매핑
+//        savedGameCharacter.getGameCharacterSkillList().add(gameCharacterSkill);
+//        savedSkill.getGameCharacterSkillList().add(gameCharacterSkill);
+//        GameCharacter newSavedGameCharacter = gameCharacterRepository.save(savedGameCharacter);
+//        Skill newSavedSkill = skillRepository.save(savedSkill);
+
+        // then
+        then(gameCharacterRepository).should(times(2)).save(any(GameCharacter.class));
+        then(skillRepository).should(times(2)).save(any(Skill.class));
+        assertThat(gameCharacterSkillResponseDto).isNotNull();
+        assertThat(gameCharacterSkillResponseDto.getGameCharacter()).isEqualTo(gameCharacter);
+        assertThat(gameCharacterSkillResponseDto.getSkill()).isEqualTo(skill);
+    }
+
     @DisplayName("캐릭터 스킬 사용 성공")
     @Test
     public void GameCharacterUseSkillSuccess() {
@@ -127,6 +157,7 @@ public class GameCharacterServiceImplTest {
         // given
         Skill skill = buildSkill(CharacterSpecies.HUMAN, 1000F, 10);
         given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(gameCharacter);
+        given(skillRepository.save(any(Skill.class))).willReturn(skill);
         given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(gameCharacter));
         given(skillRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(skill));
 
@@ -207,6 +238,14 @@ public class GameCharacterServiceImplTest {
                 .requiredMp(requiredMp)
                 .requiredLevel(requiredLevel)
                 .effect("attackSpeed,+10")
+                .build();
+    }
+
+    private GameCharacterSkill buildGameCharacterSkill(GameCharacter gameCharacter, Skill skill) {
+        return GameCharacterSkill.builder()
+                .id(1L)
+                .gameCharacter(gameCharacter)
+                .skill(skill)
                 .build();
     }
 }
