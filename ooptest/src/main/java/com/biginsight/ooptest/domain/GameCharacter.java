@@ -38,4 +38,7 @@ public class GameCharacter {    // Character 로 사용 시 예약어 충돌 발
     @JoinColumn(name = "weapon_id")
     private Weapon weapon;
 
+    public void wearWeapon(Weapon weapon) {
+        this.weapon = weapon;
+    }
 }

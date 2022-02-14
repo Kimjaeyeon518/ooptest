@@ -3,7 +3,9 @@ package com.biginsight.ooptest.service;
 import com.biginsight.ooptest.domain.CharacterSpecies;
 import com.biginsight.ooptest.domain.GameCharacter;
 import com.biginsight.ooptest.domain.Weapon;
+import com.biginsight.ooptest.dto.request.GameCharacterRequestDto;
 import com.biginsight.ooptest.repository.GameCharacterRepository;
+import com.biginsight.ooptest.repository.WeaponRepository;
 import com.biginsight.ooptest.serviceImpl.GameCharacterServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -28,6 +30,8 @@ public class GameCharacterServiceImplTest {
 
     @Mock
     private GameCharacterRepository gameCharacterRepository;
+    @Mock
+    private WeaponRepository weaponRepository;
 
 
     private GameCharacter buildHuman(Weapon weapon) {
@@ -66,12 +70,32 @@ public class GameCharacterServiceImplTest {
         assertThat(savedGameCharacter).isEqualTo(gameCharacter);
     }
 
+    @DisplayName("캐릭터 무기 착용(변경) 성공")
+    @Test
+    public void GameCharacterWearsWeapon() {
+        // given
+        GameCharacter newWeaponHuman = buildHuman(buildHumanWeapon());
+        Weapon newWeapon = buildHumanWeapon();
+        given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(newWeaponHuman);
+        given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(newWeaponHuman));
+        given(weaponRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(newWeapon));
+
+        // when
+        GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
+        GameCharacter wearWeaponGameCharacter = gameCharacterService.wearWeapon(savedGameCharacter.getId(), buildHumanWeapon().getId());
+
+        // then
+        then(gameCharacterRepository).should(times(2)).save(any(GameCharacter.class));
+        assertThat(wearWeaponGameCharacter).isEqualTo(newWeaponHuman);
+    }
+
     private Weapon buildDefaultWeapon() {
         CharacterSpecies characterSpecies = CharacterSpecies.COMMON;
         String name = "default_weapon";
         String effect = "";
 
         return Weapon.builder()
+                .id(1L)
                 .characterSpecies(characterSpecies)
                 .name(name)
                 .effect(effect)
@@ -84,6 +108,7 @@ public class GameCharacterServiceImplTest {
         String effect = "attackPower,+5";
 
         return Weapon.builder()
+                .id(2L)
                 .characterSpecies(characterSpecies)
                 .name(name)
                 .effect(effect)
