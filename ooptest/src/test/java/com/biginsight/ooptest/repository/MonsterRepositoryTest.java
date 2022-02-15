@@ -11,6 +11,8 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
+import java.util.Optional;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
@@ -44,6 +46,23 @@ class MonsterRepositoryTest {
         // then
         then(monsterRepository).should(times(1)).save(monster);
         assertThat(savedMonster).isEqualTo(monster);
+    }
+
+    @DisplayName("몬스터 조회")
+    @Test
+    public void findGameCharacter() {
+        // given
+        given(monsterRepository.save(any(Monster.class))).willReturn(monster);
+        given(monsterRepository.findById(any(Long.class))).willReturn(Optional.ofNullable(monster));
+
+        // when
+        Monster savedMonster = monsterRepository.save(monster);
+        Monster foundMonster = monsterRepository.findById(monster.getId()).get();
+
+        // then
+        then(monsterRepository).should(times(1)).save(monster);
+        then(monsterRepository).should(times(1)).findById(monster.getId());
+        assertThat(savedMonster).isEqualTo(foundMonster);
     }
 
 
