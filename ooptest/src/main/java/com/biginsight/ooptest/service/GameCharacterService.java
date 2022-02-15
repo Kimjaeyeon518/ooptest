@@ -10,4 +10,5 @@ public interface GameCharacterService {
     GameCharacterResponseDto wearWeapon(Long gameCharacterId, Long weaponId);
     GameCharacterResponseDto useSkill(Long gameCharacterId, Long skillId);
     GameCharacterSkillResponseDto getSkill(Long gameCharacterId, Long skillId);
+    GameCharacterResponseDto underattack(Long gameCharacterId, Float underattackPower);
 }
