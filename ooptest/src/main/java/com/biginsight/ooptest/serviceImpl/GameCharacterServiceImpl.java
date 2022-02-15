@@ -14,10 +14,13 @@ import com.biginsight.ooptest.repository.SkillRepository;
 import com.biginsight.ooptest.repository.WeaponRepository;
 import com.biginsight.ooptest.service.GameCharacterService;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import javax.transaction.Transactional;
+import java.util.Random;
 
+@Slf4j
 @Service
 @Transactional
 @RequiredArgsConstructor
@@ -46,20 +49,9 @@ public class GameCharacterServiceImpl implements GameCharacterService {
         if(!findGameCharacter.getCharacterSpecies().equals(findWeapon.getCharacterSpecies()))
             throw new ApiException(ApiErrorCode.INVALID_SPECIES);
 
-        GameCharacter gameCharacter = GameCharacter.builder()
-                .id(findGameCharacter.getId())
-                .level(findGameCharacter.getLevel())
-                .hp(findGameCharacter.getHp())
-                .mp(findGameCharacter.getMp())
-                .attackPower(findGameCharacter.getAttackPower())
-                .attackSpeed(findGameCharacter.getAttackSpeed())
-                .defensePower(findGameCharacter.getDefensePower())
-                .avoidanceRate(findGameCharacter.getAvoidanceRate())
-                .characterSpecies(findGameCharacter.getCharacterSpecies())
-                .weapon(findWeapon)     // 무기 착용
-                .build();
+        findGameCharacter.setWeapon(findWeapon);    // 무기 착용
 
-        GameCharacter savedGameCharacter = gameCharacterRepository.save(gameCharacter);
+        GameCharacter savedGameCharacter = gameCharacterRepository.save(findGameCharacter);
         
         return returnGameCharacterResponse(savedGameCharacter).wearWeapon(savedGameCharacter.getWeapon());
     }
@@ -80,20 +72,9 @@ public class GameCharacterServiceImpl implements GameCharacterService {
         if (findGameCharacter.getMp() < findSkill.getRequiredMp())
             throw new ApiException(ApiErrorCode.NOT_ENOUGH_MP);
 
-        GameCharacter gameCharacter = GameCharacter.builder()
-                .id(findGameCharacter.getId())
-                .level(findGameCharacter.getLevel())
-                .hp(findGameCharacter.getHp())
-                .mp(findGameCharacter.getMp() - findSkill.getRequiredMp())  // 스킬 사용 마나량만큼 감소
-                .attackPower(findGameCharacter.getAttackPower())
-                .attackSpeed(findGameCharacter.getAttackSpeed())
-                .defensePower(findGameCharacter.getDefensePower())
-                .avoidanceRate(findGameCharacter.getAvoidanceRate())
-                .characterSpecies(findGameCharacter.getCharacterSpecies())
-                .weapon(findGameCharacter.getWeapon())
-                .build();
+        findGameCharacter.setMp(findGameCharacter.getMp() - findSkill.getRequiredMp());
 
-        GameCharacter savedGameCharacter = gameCharacterRepository.save(gameCharacter);
+        GameCharacter savedGameCharacter = gameCharacterRepository.save(findGameCharacter);
 
         return returnGameCharacterResponse(savedGameCharacter).useSkill(findSkill);
     }
@@ -129,6 +110,30 @@ public class GameCharacterServiceImpl implements GameCharacterService {
         skillRepository.save(findSkill);
 
         return returnGameCharacterSkillResponse(savedGameCharacterSkill);
+    }
+
+    @Override
+    public GameCharacterResponseDto underattack(Long gameCharacterId, Float underattackPower) {
+        GameCharacter findGameCharacter = gameCharacterRepository.findById(gameCharacterId)
+                .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_GAMECHARACTER));
+
+        // ex - 회피율이 30% 일 때, 0~100 중 랜덤으로 뽑은 숫자가 30미만일 확률 == 30%
+        if(new Random().nextInt(100) < findGameCharacter.getAvoidanceRate()){
+            log.info("캐릭터가 공격을 회피하였습니다 !");
+        }
+        else {
+            Float totalDamage = (underattackPower - findGameCharacter.getDefensePower());
+            // 캐릭터의 방어력이 받은 공격력보다 높을 경우
+            if(totalDamage <= 0)
+                log.info("캐릭터가 공격당하였습니다 ! 최종 데미지 : 0, 현재 HP : " + findGameCharacter.getHp());
+            else {
+                findGameCharacter.setHp(findGameCharacter.getHp() - totalDamage);
+                log.info("캐릭터가 공격당하였습니다 ! 최종 데미지 : " + totalDamage + ", 현재 HP : " + findGameCharacter.getHp());
+            }
+        }
+        GameCharacter savedGameCharacter = gameCharacterRepository.save(findGameCharacter);
+
+        return returnGameCharacterResponse(savedGameCharacter);
     }
 
     public GameCharacterResponseDto returnGameCharacterResponse(GameCharacter savedGameCharacter) {

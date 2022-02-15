@@ -260,6 +260,23 @@ public class GameCharacterServiceImplTest {
         assertThat(exception.getMessage()).isEqualTo(ApiErrorCode.CANNOT_FOUND_SKILL.getMessage());
     }
 
+    @DisplayName("공격 회피")
+    @Test
+    public void GameCharacterAvoidUnderattack() {
+        // given
+        given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(gameCharacter);
+        given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(gameCharacter));
+
+        // when
+        GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
+        GameCharacterResponseDto gameCharacterResponseDto = gameCharacterService.underattack(savedGameCharacter.getId(), 10F);
+
+        // then
+        then(gameCharacterRepository).should(times(2)).save(any(GameCharacter.class));
+        assertThat(gameCharacterResponseDto.getHp()).isEqualTo(gameCharacter.getHp());
+    }
+
+
     private GameCharacter buildHuman(Weapon weapon) {
         return GameCharacter.builder()
                 .id(1L)
@@ -269,7 +286,7 @@ public class GameCharacterServiceImplTest {
                 .attackPower(10F)
                 .attackSpeed(30F)
                 .defensePower(5F)
-                .avoidanceRate(20F)
+                .avoidanceRate(30F)
                 .characterSpecies(CharacterSpecies.HUMAN)
                 .gameCharacterSkillList(new ArrayList<>())
                 .weapon(weapon)
