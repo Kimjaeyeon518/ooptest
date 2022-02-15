@@ -39,33 +39,4 @@ public class GameCharacter {    // Character 로 사용 시 예약어 충돌 발
     @JoinColumn(name = "weapon_id", nullable = false)
     private Weapon weapon;
 
-    public void attack() {
-        if(this.weapon != null) {
-            String[] weaponEffects = weapon.getEffect().split(";");
-
-            for(String weaponEffect : weaponEffects) {
-                String[] effectDetail = weaponEffect.split(",");    // 무기 효과를 받는 속성 (ex) attackPower, attackSpeed
-                String effectDetailFigure = effectDetail[1].replaceAll("[^+^-^0-9]", "");   // 무기 효과 수치 (ex) +5%, -10 ...
-
-                switch (effectDetail[0]) {
-                    case "attackPower":
-                        if(effectDetail[1].contains("%"))
-                            this.attackPower *= (100 + Integer.valueOf(effectDetailFigure)) / 100;
-                        else
-                            this.attackPower += Integer.valueOf(effectDetailFigure);
-                        break;
-
-                    case "attackSpeed":
-                        if(effectDetail[1].contains("%"))
-                            this.attackSpeed *= (100 + Integer.valueOf(effectDetailFigure)) / 100;
-                        else
-                            this.attackSpeed += Integer.valueOf(effectDetailFigure);
-                        break;
-
-                    default:
-                        break;
-                }
-            }
-        }
-    }
 }

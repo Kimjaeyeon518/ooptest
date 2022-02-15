@@ -61,7 +61,7 @@ public class GameCharacterServiceImpl implements GameCharacterService {
 
         GameCharacter savedGameCharacter = gameCharacterRepository.save(gameCharacter);
         
-        return returnGameCharacterResponse(savedGameCharacter);
+        return returnGameCharacterResponse(savedGameCharacter).wearWeapon(savedGameCharacter.getWeapon());
     }
 
     @Override
@@ -122,9 +122,9 @@ public class GameCharacterServiceImpl implements GameCharacterService {
         // 양방향매핑
         findSkill.getGameCharacterSkillList().add(gameCharacterSkill);
         findGameCharacter.getGameCharacterSkillList().add(gameCharacterSkill);
-        
-        GameCharacterSkill savedGameCharacterSkill = gameCharacterSkillRepository.save(gameCharacterSkill);
 
+        // 캐릭터 스킬 습득
+        GameCharacterSkill savedGameCharacterSkill = gameCharacterSkillRepository.save(gameCharacterSkill);
         gameCharacterRepository.save(findGameCharacter);
         skillRepository.save(findSkill);
 

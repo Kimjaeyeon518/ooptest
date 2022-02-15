@@ -81,6 +81,7 @@ public class GameCharacterServiceImplTest {
         then(gameCharacterRepository).should(times(2)).save(any(GameCharacter.class));
         assertThat(wearWeaponGameCharacter).isNotNull();
         assertThat(wearWeaponGameCharacter.getId()).isEqualTo(savedGameCharacter.getId());
+        assertThat(wearWeaponGameCharacter.getAttackPower()).isEqualTo(gameCharacter.getAttackPower() * 105/100);
     }
 
     @DisplayName("캐릭터 무기 착용(변경) 실패(종족 불일치)")
@@ -289,7 +290,7 @@ public class GameCharacterServiceImplTest {
 
     private Weapon buildWeapon(CharacterSpecies characterSpecies) {
         String name = "Short sword";
-        String effect = "attackPower,-5%";
+        String effect = "attackPower,+5%";
 
         return Weapon.builder()
                 .id(2L)
@@ -308,6 +309,7 @@ public class GameCharacterServiceImplTest {
                 .requiredLevel(requiredLevel)
                 .gameCharacterSkillList(new ArrayList<>())
                 .effect("attackSpeed,+10")
+                .duration(10)
                 .build();
     }
 
