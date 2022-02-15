@@ -10,7 +10,9 @@ import javax.persistence.*;
 
 @Entity
 @Getter
+@Builder
 @NoArgsConstructor
+@AllArgsConstructor
 public class GameCharacterSkill {       // 캐릭터가 스킬을 습득했음을 나타내는 테이블
 
     @Id
@@ -25,12 +27,4 @@ public class GameCharacterSkill {       // 캐릭터가 스킬을 습득했음�
     @JoinColumn(name = "skill_id")
     private Skill skill;
 
-    @Builder
-    public GameCharacterSkill(Long id, GameCharacter gameCharacter, Skill skill) {
-        this.id = id;
-        this.gameCharacter = gameCharacter;
-        this.skill = skill;
-//        this.gameCharacter.getGameCharacterSkillList().add(this);  // 양방향 매핑
-//        this.skill.getGameCharacterSkillList().add(this);    // 양방향 매핑
-    }
 }

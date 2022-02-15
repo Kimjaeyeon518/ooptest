@@ -44,7 +44,7 @@ public class GameCharacterServiceImpl implements GameCharacterService {
 
         // 캐릭터 종족과 무기 종족이 불일치할 경우
         if(!findGameCharacter.getCharacterSpecies().equals(findWeapon.getCharacterSpecies()))
-            throw new ApiException(ApiErrorCode.INVALID_WEAPON_SPECIES);
+            throw new ApiException(ApiErrorCode.INVALID_SPECIES);
 
         GameCharacter gameCharacter = GameCharacter.builder()
                 .id(findGameCharacter.getId())
@@ -71,6 +71,10 @@ public class GameCharacterServiceImpl implements GameCharacterService {
 
         Skill findSkill = skillRepository.findById(skillId)
                 .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_WEAPON));
+
+        // 캐릭터가 습득한 스킬이 아닐 경우
+        if(!gameCharacterSkillRepository.existsByGameCharacterAndSkill(findGameCharacter, findSkill))
+            throw new ApiException(ApiErrorCode.CANNOT_FOUND_SKILL);
 
         // 캐릭터의 마나가 부족할 경우
         if (findGameCharacter.getMp() < findSkill.getRequiredMp())
@@ -104,7 +108,7 @@ public class GameCharacterServiceImpl implements GameCharacterService {
 
         // 캐릭터 종족과 스킬 종족이 불일치할 경우
         if (!findGameCharacter.getCharacterSpecies().equals(findSkill.getCharacterSpecies()))
-            throw new ApiException(ApiErrorCode.INVALID_WEAPON_SPECIES);
+            throw new ApiException(ApiErrorCode.INVALID_SPECIES);
 
         // 캐릭터의 레벨이 스킬 사용 제한 레벨보다 낮을 경우
         if (findGameCharacter.getLevel() < findSkill.getRequiredLevel())
@@ -114,10 +118,13 @@ public class GameCharacterServiceImpl implements GameCharacterService {
                 .gameCharacter(findGameCharacter)
                 .skill(findSkill)
                 .build();
+
+        // 양방향매핑
+        findSkill.getGameCharacterSkillList().add(gameCharacterSkill);
+        findGameCharacter.getGameCharacterSkillList().add(gameCharacterSkill);
         
         GameCharacterSkill savedGameCharacterSkill = gameCharacterSkillRepository.save(gameCharacterSkill);
-        
-        // 양방향매핑
+
         gameCharacterRepository.save(findGameCharacter);
         skillRepository.save(findSkill);
 
