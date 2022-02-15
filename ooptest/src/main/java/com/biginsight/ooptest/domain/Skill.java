@@ -26,6 +26,7 @@ public class Skill {
     private Float requiredMp;     // 소요 mp
     private Integer requiredLevel;  // 필요 레벨
     private String effect;          // 스킬 효과
+    private Long duration;       // 지속 시간(초)
 
     @OneToMany(mappedBy = "skill")
     private List<GameCharacterSkill> gameCharacterSkillList = new ArrayList<>();

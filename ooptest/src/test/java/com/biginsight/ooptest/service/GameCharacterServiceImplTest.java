@@ -197,15 +197,16 @@ public class GameCharacterServiceImplTest {
         GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
         Skill savedSkill = skillRepository.save(skill);
         GameCharacterSkillResponseDto gameCharacterSkillResponseDto = gameCharacterService.getSkill(savedGameCharacter.getId(), savedSkill.getId());
-        GameCharacterResponseDto wearWeaponGameCharacter = gameCharacterService.useSkill(savedGameCharacter.getId(), skill.getId());
+        GameCharacterResponseDto useSkillGameCharacter = gameCharacterService.useSkill(savedGameCharacter.getId(), skill.getId());
 
         // then
         then(gameCharacterRepository).should(times(3)).save(any(GameCharacter.class));
-        assertThat(wearWeaponGameCharacter).isNotNull();
-        assertThat(wearWeaponGameCharacter.getId()).isEqualTo(savedGameCharacter.getId());
+        assertThat(useSkillGameCharacter).isNotNull();
+        assertThat(useSkillGameCharacter.getId()).isEqualTo(savedGameCharacter.getId());
         assertThat(gameCharacterSkillResponseDto.getSkill()).isEqualTo(skill);
         assertThat(gameCharacterSkillResponseDto.getId()).isEqualTo(skill.getGameCharacterSkillList().get(0).getId());
         assertThat(gameCharacterSkillResponseDto.getId()).isEqualTo(gameCharacter.getGameCharacterSkillList().get(0).getId());
+        assertThat(useSkillGameCharacter.getAttackSpeed()).isEqualTo(gameCharacter.getAttackSpeed() + 10);
     }
 
     @DisplayName("캐릭터 스킬 사용 실패(마나 부족)")
@@ -309,7 +310,7 @@ public class GameCharacterServiceImplTest {
                 .requiredLevel(requiredLevel)
                 .gameCharacterSkillList(new ArrayList<>())
                 .effect("attackSpeed,+10")
-                .duration(10)
+                .duration(10L)
                 .build();
     }
 

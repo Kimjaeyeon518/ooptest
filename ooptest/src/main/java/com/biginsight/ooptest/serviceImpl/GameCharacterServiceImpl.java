@@ -95,7 +95,7 @@ public class GameCharacterServiceImpl implements GameCharacterService {
 
         GameCharacter savedGameCharacter = gameCharacterRepository.save(gameCharacter);
 
-        return returnGameCharacterResponse(savedGameCharacter);
+        return returnGameCharacterResponse(savedGameCharacter).useSkill(findSkill);
     }
 
     @Override
