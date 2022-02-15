@@ -276,6 +276,22 @@ public class GameCharacterServiceImplTest {
         assertThat(gameCharacterResponseDto.getHp()).isEqualTo(gameCharacter.getHp());
     }
 
+    @DisplayName("캐릭터 사망(HP <= 0)")
+    @Test
+    public void GameCharacterIsDead() {
+        // given
+        GameCharacter deadGameCharacter = buildHuman(buildWeapon(CharacterSpecies.COMMON));
+        deadGameCharacter.setHp(0F);
+        given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(deadGameCharacter);
+
+        // when
+        GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(deadGameCharacter);
+        gameCharacterService.checkHp(savedGameCharacter);
+
+        // then
+        then(gameCharacterRepository).should(times(1)).save(any(GameCharacter.class));
+    }
+
 
     private GameCharacter buildHuman(Weapon weapon) {
         return GameCharacter.builder()

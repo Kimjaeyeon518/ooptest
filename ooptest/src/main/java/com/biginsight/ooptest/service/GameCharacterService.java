@@ -11,4 +11,5 @@ public interface GameCharacterService {
     GameCharacterResponseDto useSkill(Long gameCharacterId, Long skillId);
     GameCharacterSkillResponseDto getSkill(Long gameCharacterId, Long skillId);
     GameCharacterResponseDto underattack(Long gameCharacterId, Float underattackPower);
+    GameCharacter checkHp(GameCharacter gameCharacter);
 }

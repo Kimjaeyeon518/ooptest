@@ -131,9 +131,22 @@ public class GameCharacterServiceImpl implements GameCharacterService {
                 log.info("캐릭터가 공격당하였습니다 ! 최종 데미지 : " + totalDamage + ", 현재 HP : " + findGameCharacter.getHp());
             }
         }
-        GameCharacter savedGameCharacter = gameCharacterRepository.save(findGameCharacter);
+
+        // 캐릭터 HP 상태 체크
+        GameCharacter checkedGameCharacter = checkHp(findGameCharacter);
+
+        GameCharacter savedGameCharacter = gameCharacterRepository.save(checkedGameCharacter);
 
         return returnGameCharacterResponse(savedGameCharacter);
+    }
+
+    @Override
+    public GameCharacter checkHp(GameCharacter gameCharacter) {
+        if(gameCharacter.getHp() <= 0) {
+            gameCharacter.setHp(0F);
+            log.info("캐릭터가 죽었습니다.");
+        }
+        return gameCharacter;
     }
 
     public GameCharacterResponseDto returnGameCharacterResponse(GameCharacter savedGameCharacter) {
