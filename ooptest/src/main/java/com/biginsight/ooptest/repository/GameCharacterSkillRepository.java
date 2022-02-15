@@ -7,5 +7,5 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 public interface GameCharacterSkillRepository extends JpaRepository<GameCharacterSkill, Long> {
-    boolean existsByGameCharacterAndSkill(GameCharacter gameCharacter, Skill skill);
+    boolean existsByGameCharacterIdAndSkillId(Long gameCharacterId, Long skillId);
 }

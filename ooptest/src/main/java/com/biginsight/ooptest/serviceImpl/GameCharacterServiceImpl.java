@@ -73,7 +73,7 @@ public class GameCharacterServiceImpl implements GameCharacterService {
                 .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_WEAPON));
 
         // 캐릭터가 습득한 스킬이 아닐 경우
-        if(!gameCharacterSkillRepository.existsByGameCharacterAndSkill(findGameCharacter, findSkill))
+        if(!gameCharacterSkillRepository.existsByGameCharacterIdAndSkillId(gameCharacterId, skillId))
             throw new ApiException(ApiErrorCode.CANNOT_FOUND_SKILL);
 
         // 캐릭터의 마나가 부족할 경우

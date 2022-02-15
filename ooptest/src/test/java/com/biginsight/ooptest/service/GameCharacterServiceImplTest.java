@@ -130,6 +130,8 @@ public class GameCharacterServiceImplTest {
         assertThat(gameCharacterSkillResponseDto).isNotNull();
         assertThat(gameCharacterSkillResponseDto.getGameCharacter()).isEqualTo(gameCharacter);
         assertThat(gameCharacterSkillResponseDto.getSkill()).isEqualTo(skill);
+        assertThat(gameCharacterSkillResponseDto.getId()).isEqualTo(skill.getGameCharacterSkillList().get(0).getId());
+        assertThat(gameCharacterSkillResponseDto.getId()).isEqualTo(gameCharacter.getGameCharacterSkillList().get(0).getId());
     }
 
     @DisplayName("캐릭터 스킬 습득 실패(레벨 부족)")
@@ -137,6 +139,7 @@ public class GameCharacterServiceImplTest {
     public void GameCharacterGetSkillFailedByLevel() {
         // given
         Skill skill = buildSkill(CharacterSpecies.HUMAN, 10F, 1000);
+
         given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(gameCharacter);
         given(skillRepository.save(any(Skill.class))).willReturn(skill);
         given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(gameCharacter));
@@ -147,12 +150,6 @@ public class GameCharacterServiceImplTest {
         Skill savedSkill = skillRepository.save(skill);
         ApiException exception = assertThrows(ApiException.class,
                 () -> gameCharacterService.getSkill(savedGameCharacter.getId(),savedSkill.getId()));
-
-        // 양방향 매핑
-//        savedGameCharacter.getGameCharacterSkillList().add(gameCharacterSkill);
-//        savedSkill.getGameCharacterSkillList().add(gameCharacterSkill);
-//        GameCharacter newSavedGameCharacter = gameCharacterRepository.save(savedGameCharacter);
-//        Skill newSavedSkill = skillRepository.save(savedSkill);
 
         // then
         then(gameCharacterRepository).should(times(1)).save(any(GameCharacter.class));
@@ -173,12 +170,6 @@ public class GameCharacterServiceImplTest {
         ApiException exception = assertThrows(ApiException.class,
                 () -> gameCharacterService.getSkill(savedGameCharacter.getId(),skill.getId()));
 
-        // 양방향 매핑
-//        savedGameCharacter.getGameCharacterSkillList().add(gameCharacterSkill);
-//        savedSkill.getGameCharacterSkillList().add(gameCharacterSkill);
-//        GameCharacter newSavedGameCharacter = gameCharacterRepository.save(savedGameCharacter);
-//        Skill newSavedSkill = skillRepository.save(savedSkill);
-
         // then
         then(gameCharacterRepository).should(times(1)).save(any(GameCharacter.class));
         assertThat(exception.getMessage()).isEqualTo(ApiErrorCode.INVALID_SPECIES.getMessage());
@@ -189,18 +180,31 @@ public class GameCharacterServiceImplTest {
     public void GameCharacterUseSkillSuccess() {
         // given
         Skill skill = buildSkill(CharacterSpecies.HUMAN, 10F, 10);
+        GameCharacterSkill gameCharacterSkill = buildGameCharacterSkill(gameCharacter, skill);
+
+        skill.getGameCharacterSkillList().add(gameCharacterSkill);          // 양방향 매핑
+        gameCharacter.getGameCharacterSkillList().add(gameCharacterSkill);  // 양방향 매핑
+
         given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(gameCharacter);
         given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(gameCharacter));
         given(skillRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(skill));
+        given(skillRepository.save(any(Skill.class))).willReturn(skill);
+        given(gameCharacterSkillRepository.save(any(GameCharacterSkill.class))).willReturn(gameCharacterSkill);
+        given(gameCharacterSkillRepository.existsByGameCharacterIdAndSkillId(any(Long.class), any(Long.class))).willReturn(true);
 
         // when
         GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
+        Skill savedSkill = skillRepository.save(skill);
+        GameCharacterSkillResponseDto gameCharacterSkillResponseDto = gameCharacterService.getSkill(savedGameCharacter.getId(), savedSkill.getId());
         GameCharacterResponseDto wearWeaponGameCharacter = gameCharacterService.useSkill(savedGameCharacter.getId(), skill.getId());
 
         // then
-        then(gameCharacterRepository).should(times(2)).save(any(GameCharacter.class));
+        then(gameCharacterRepository).should(times(3)).save(any(GameCharacter.class));
         assertThat(wearWeaponGameCharacter).isNotNull();
         assertThat(wearWeaponGameCharacter.getId()).isEqualTo(savedGameCharacter.getId());
+        assertThat(gameCharacterSkillResponseDto.getSkill()).isEqualTo(skill);
+        assertThat(gameCharacterSkillResponseDto.getId()).isEqualTo(skill.getGameCharacterSkillList().get(0).getId());
+        assertThat(gameCharacterSkillResponseDto.getId()).isEqualTo(gameCharacter.getGameCharacterSkillList().get(0).getId());
     }
 
     @DisplayName("캐릭터 스킬 사용 실패(마나 부족)")
@@ -208,18 +212,31 @@ public class GameCharacterServiceImplTest {
     public void GameCharacterUseSkillFailedByMp() {
         // given
         Skill skill = buildSkill(CharacterSpecies.HUMAN, 1000F, 10);
+        GameCharacterSkill gameCharacterSkill = buildGameCharacterSkill(gameCharacter, skill);
+
+        skill.getGameCharacterSkillList().add(gameCharacterSkill);          // 양방향 매핑
+        gameCharacter.getGameCharacterSkillList().add(gameCharacterSkill);  // 양방향 매핑
+
         given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(gameCharacter);
+        given(skillRepository.save(any(Skill.class))).willReturn(skill);
         given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(gameCharacter));
         given(skillRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(skill));
+        given(gameCharacterSkillRepository.save(any(GameCharacterSkill.class))).willReturn(gameCharacterSkill);
+        given(gameCharacterSkillRepository.existsByGameCharacterIdAndSkillId(any(Long.class), any(Long.class))).willReturn(true);
 
         // when
         GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
+        Skill savedSkill = skillRepository.save(skill);
+        GameCharacterSkillResponseDto gameCharacterSkillResponseDto = gameCharacterService.getSkill(savedGameCharacter.getId(), savedSkill.getId());
         ApiException exception = assertThrows(ApiException.class,
-                () -> gameCharacterService.useSkill(savedGameCharacter.getId(),skill.getId()));
+                () -> gameCharacterService.useSkill(savedGameCharacter.getId(),savedSkill.getId()));
 
         // then
-        then(gameCharacterRepository).should(times(1)).save(any(GameCharacter.class));
+        then(gameCharacterRepository).should(times(2)).save(any(GameCharacter.class));
         assertThat(exception.getMessage()).isEqualTo(ApiErrorCode.NOT_ENOUGH_MP.getMessage());
+        assertThat(gameCharacterSkillResponseDto.getSkill()).isEqualTo(skill);
+        assertThat(gameCharacterSkillResponseDto.getId()).isEqualTo(skill.getGameCharacterSkillList().get(0).getId());
+        assertThat(gameCharacterSkillResponseDto.getId()).isEqualTo(gameCharacter.getGameCharacterSkillList().get(0).getId());
     }
 
     @DisplayName("캐릭터 스킬 사용 실패(미습득)")
