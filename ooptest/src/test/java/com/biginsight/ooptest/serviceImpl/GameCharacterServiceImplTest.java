@@ -1,4 +1,4 @@
-package com.biginsight.ooptest.service;
+package com.biginsight.ooptest.serviceImpl;
 
 import com.biginsight.ooptest.domain.*;
 import com.biginsight.ooptest.dto.response.GameCharacterResponseDto;

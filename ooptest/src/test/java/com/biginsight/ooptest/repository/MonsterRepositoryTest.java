@@ -30,7 +30,7 @@ class MonsterRepositoryTest {
     private Monster monster;
 
     @BeforeEach
-    public void initGameCharacter() {
+    public void initMonster() {
         monster = buildMonster();
     }
 
@@ -50,7 +50,7 @@ class MonsterRepositoryTest {
 
     @DisplayName("몬스터 조회")
     @Test
-    public void findGameCharacter() {
+    public void findMonster() {
         // given
         given(monsterRepository.save(any(Monster.class))).willReturn(monster);
         given(monsterRepository.findById(any(Long.class))).willReturn(Optional.ofNullable(monster));
