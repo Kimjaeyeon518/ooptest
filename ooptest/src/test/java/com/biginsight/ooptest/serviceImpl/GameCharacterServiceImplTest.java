@@ -1,8 +1,10 @@
 package com.biginsight.ooptest.serviceImpl;
 
 import com.biginsight.ooptest.domain.*;
+import com.biginsight.ooptest.dto.response.FightResponseDto;
 import com.biginsight.ooptest.dto.response.GameCharacterResponseDto;
 import com.biginsight.ooptest.dto.response.GameCharacterSkillResponseDto;
+import com.biginsight.ooptest.dto.response.MonsterResponseDto;
 import com.biginsight.ooptest.exception.ApiErrorCode;
 import com.biginsight.ooptest.exception.ApiException;
 import com.biginsight.ooptest.repository.*;
@@ -18,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.util.ArrayList;
+import java.util.Date;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -83,14 +86,14 @@ public class GameCharacterServiceImplTest {
         given(weaponSevice.findById(any(Long.class))).willReturn(weapon);
 
         // when
-        GameCharacterResponseDto wearWeaponGameCharacterDto = gameCharacterService.wearWeapon(gameCharacter.getId(), weapon.getId());
+        GameCharacter savedGameCharacter = gameCharacterService.wearWeapon(gameCharacter.getId(), weapon.getId());
 
         // then
         then(gameCharacterRepository).should(times(1)).findById(any(Long.class));
         then(gameCharacterRepository).should(times(1)).save(any(GameCharacter.class));
         then(weaponSevice).should(times(1)).findById(any(Long.class));
-        assertThat(wearWeaponGameCharacterDto).isNotNull();
-        assertThat(wearWeaponGameCharacterDto.getWeapon()).isEqualTo(wearWeaponGameCharacter.getWeapon());
+        assertThat(savedGameCharacter).isNotNull();
+        assertThat(wearWeaponGameCharacter.getWeapon()).isEqualTo(savedGameCharacter.getWeapon());
     }
 
     @DisplayName("캐릭터 무기 착용 실패(종족 불일치)")
@@ -143,7 +146,6 @@ public class GameCharacterServiceImplTest {
     public void GameCharacterGetSkillFailedByLevel() {
         // given
         Skill highLevelSkill = buildSkill(CharacterSpecies.HUMAN, 10F, 1000);
-
         given(skillService.findById(any(Long.class))).willReturn(highLevelSkill);
         given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(gameCharacter));
 
@@ -239,19 +241,20 @@ public class GameCharacterServiceImplTest {
     @Test
     public void GameCharacterAttack() {
         // given
-//        Monster monster = buildMonster();
-////        FightResponseDto fightResponseDto = new FightResponseDto(gameCharacter.getId(), monster.getId());
-////        given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(gameCharacter);
-//        given(gameCharacterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(gameCharacter));
-//        given(monsterRepository.findById(any(Long.class))).willReturn(java.util.Optional.ofNullable(monster));
-//
-//        // when
-////        GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
-////        FightResponseDto afterFightResponseDto = gameCharacterService.gameCharacterAttack(fightResponseDto);
-//
-//        // then
-//        then(gameCharacterRepository).should(times(2)).save(any(GameCharacter.class));
-////        assertThat(gameCharacterResponseDto.getHp()).isEqualTo(gameCharacter.getHp());
+        GameCharacterResponseDto originalGameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
+        MonsterResponseDto originalMonsterResponseDto = buildMonsterResponseDto(monster);
+        GameCharacterResponseDto reflectedGameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
+        MonsterResponseDto reflectedMonsterResponseDto = buildMonsterResponseDto(monster);
+        reflectedMonsterResponseDto.setHp(50F);
+        FightResponseDto fightResponseDto = new FightResponseDto(originalGameCharacterResponseDto, originalMonsterResponseDto, reflectedGameCharacterResponseDto, reflectedMonsterResponseDto);
+        given(monsterService.underattack(any(FightResponseDto.class))).willReturn(fightResponseDto);
+
+        // when
+        FightResponseDto afterFightResponseDto = gameCharacterService.doAttack(fightResponseDto);
+
+        // then
+        then(monsterService).should(times(1)).underattack(any(FightResponseDto.class));
+        assertThat(afterFightResponseDto.getReflectedMonsterResponseDto().getHp()).isEqualTo(afterFightResponseDto.getOriginalMonsterResponseDto().getHp() - 50F);
     }
     
     @DisplayName("캐릭터가 공격받음")
@@ -268,16 +271,13 @@ public class GameCharacterServiceImplTest {
     @Test
     public void GameCharacterIsDead() {
         // given
-//        GameCharacter gameCharacter = buildGameCharacter(1L, CharacterSpecies.HUMAN ,buildWeapon(CharacterSpecies.HUMAN));
-//        gameCharacter.setHp(0F);
-//        given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(gameCharacter);
-//
-//        // when
-//        GameCharacter savedGameCharacter = gameCharacterService.addGameCharacter(gameCharacter);
-//        assertThat(gameCharacterService.isDead(savedGameCharacter)).isTrue();
-//        // then
-//        then(gameCharacterRepository).should(times(1)).save(any(GameCharacter.class));
-//        gameCharacterService.isDead(savedGameCharacter);
+        GameCharacterResponseDto gameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, skill);
+
+        // when
+        gameCharacterResponseDto.setHp(0F);
+
+        // then
+        assertThat(gameCharacterService.isDead(gameCharacterResponseDto)).isTrue();
     }
 
     @DisplayName("캐릭터 레벨업")
@@ -309,15 +309,11 @@ public class GameCharacterServiceImplTest {
     }
 
     private Weapon buildDefaultWeapon() {
-        CharacterSpecies characterSpecies = CharacterSpecies.COMMON;
-        String name = "default_weapon";
-        String effect = "";
-
         return Weapon.builder()
                 .id(1L)
-                .characterSpecies(characterSpecies)
-                .name(name)
-                .effect(effect)
+                .characterSpecies(CharacterSpecies.COMMON)
+                .name("default_weapon")
+                .effect("attackPower,+5")
                 .build();
     }
 
@@ -364,7 +360,24 @@ public class GameCharacterServiceImplTest {
                 .build();
     }
 
-    private GameCharacterResponseDto buildGameCharacterResponseDto(GameCharacter savedGameCharacter, Skill skill, int skillExpiredDate) {
+    private MonsterResponseDto buildMonsterResponseDto(Monster monster) {
+        return MonsterResponseDto.builder()
+                .id(monster.getId())
+                .hp(monster.getHp())
+                .attackPower(monster.getAttackPower())
+                .defensePower(monster.getDefensePower())
+                .counterattackRate(monster.getCounterattackRate()) // 반격 확률 Default = 30%
+                .build();
+    }
+
+    private GameCharacterResponseDto buildGameCharacterResponseDto(GameCharacter savedGameCharacter, Skill skill) {
+        long skillExpiredDate = 0;
+
+        if(skill != null) {
+            Date date = new Date();
+            skillExpiredDate = date.getTime() / 1000L + skill.getDuration();     // 밀리세컨까지는 필요없으므로 1000으로 나눔 + 스킬의 지속시간(초)
+        }
+
         return GameCharacterResponseDto.builder()
                 .id(savedGameCharacter.getId())
                 .level(savedGameCharacter.getLevel())

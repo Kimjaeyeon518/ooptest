@@ -54,23 +54,25 @@ public class GameCharacterResponseDto {
 //        }
 //    }
 
-    public GameCharacterResponseDto wearWeapon(Weapon weapon) {
+    public GameCharacterResponseDto reflectWeapon(Weapon weapon) {
         String weaponEffect = weapon.getEffect();
+        System.out.println("weaponEffect = " + weaponEffect);
         return reflectFigure(weaponEffect);
     }
 
-    public GameCharacterResponseDto useSkill(Skill skill) {
+    public GameCharacterResponseDto reflectSkill(Skill skill) {
         String skillEffect = skill.getEffect();
-        Date date = new Date();
-        long unixTime = date.getTime() / 1000L + skill.getDuration();     // 밀리세컨까지는 필요없으므로 1000으로 나눔 + 스킬의 지속시간(초)
+        System.out.println("skillEffect = " + skillEffect);
 
-        this.setSkillExpiredDate(unixTime);
         return reflectFigure(skillEffect);
     }
 
     public GameCharacterResponseDto reflectFigure(String effect) {
+        System.out.println("effect = " + effect);
         String[] effectDetail = effect.split(",");    // 무기 효과를 받는 속성 (ex) attackPower, attackSpeed
         String effectDetailFigure = effectDetail[1].replaceAll("[^+^-^0-9]", "");   // 무기 효과 수치 (ex) +5%, -10 ...
+        System.out.println("effectDetail[0] = " + effectDetail[0]);
+        System.out.println("effectDetail[1] = " + effectDetail[1]);
 
         if(effectDetail[1].contains("%")) {
             switch (effectDetail[0]) {

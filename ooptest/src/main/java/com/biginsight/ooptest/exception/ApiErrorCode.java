@@ -21,6 +21,7 @@ public enum ApiErrorCode {
 
     // MONSTER
     CANNOT_FOUND_MONSTER(4000, "아이디와 일치하는 몬스터가 존재하지 않습니다."),
+    MONSTER_IS_DEAD(4001, "몬스터가 죽었습니다."),
 
     // SKILL
     CANNOT_FOUND_SKILL(5000, "아이디와 일치하는 스킬이 존재하지 않습니다."),
