@@ -55,7 +55,7 @@ public class GameCharacterServiceImplTest {
     private Monster monster;
 
     @BeforeEach
-    public void initGameCharacter() {
+    public void initTest() {
         gameCharacter = buildGameCharacter(1L, CharacterSpecies.HUMAN, buildDefaultWeapon());
         weapon = buildWeapon(CharacterSpecies.HUMAN);
         skill = buildSkill(CharacterSpecies.HUMAN, 10F, 10);
