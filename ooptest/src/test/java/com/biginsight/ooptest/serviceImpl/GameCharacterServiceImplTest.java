@@ -237,7 +237,7 @@ public class GameCharacterServiceImplTest {
         assertThat(exception.getMessage()).isEqualTo(ApiErrorCode.CANNOT_FOUND_GAMECHARACTER_SKILL.getMessage());
     }
 
-    @DisplayName("캐릭터가 공격함")
+    @DisplayName("캐릭터가 몬스터를 공격")
     @Test
     public void GameCharacterAttack() {
         // given
@@ -261,34 +261,70 @@ public class GameCharacterServiceImplTest {
     @Test
     public void GameCharacterUnderattack() {
         // given
+        GameCharacterResponseDto originalGameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
+        MonsterResponseDto originalMonsterResponseDto = buildMonsterResponseDto(monster);
+        GameCharacterResponseDto reflectedGameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
+        MonsterResponseDto reflectedMonsterResponseDto = buildMonsterResponseDto(monster);
+        FightResponseDto fightResponseDto = new FightResponseDto(originalGameCharacterResponseDto, originalMonsterResponseDto, reflectedGameCharacterResponseDto, reflectedMonsterResponseDto);
+        given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(gameCharacter);
 
         // when
+        FightResponseDto afterFightResponseDto = gameCharacterService.underattack(fightResponseDto);
 
         // then
+        assertThat(afterFightResponseDto.getReflectedGameCharacterResponseDto().getHp()).isEqualTo(originalGameCharacterResponseDto.getHp() - 15F);
     }
 
-    @DisplayName("캐릭터 사망(HP <= 0)")
+    @DisplayName("캐릭터가 공격받다가 사망(HP <= 0)")
     @Test
     public void GameCharacterIsDead() {
         // given
-        GameCharacterResponseDto gameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, skill);
+        monster.setAttackPower(1000F);  // 몬스터 공격력 1000
+        GameCharacterResponseDto originalGameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
+        MonsterResponseDto originalMonsterResponseDto = buildMonsterResponseDto(monster);
+        GameCharacterResponseDto reflectedGameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
+        MonsterResponseDto reflectedMonsterResponseDto = buildMonsterResponseDto(monster);
+        FightResponseDto fightResponseDto = new FightResponseDto(originalGameCharacterResponseDto, originalMonsterResponseDto, reflectedGameCharacterResponseDto, reflectedMonsterResponseDto);
+        given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(gameCharacter);
 
         // when
-        gameCharacterResponseDto.setHp(0F);
+        ApiException exception = assertThrows(ApiException.class,
+                () -> gameCharacterService.underattack(fightResponseDto));
 
         // then
-        assertThat(gameCharacterService.isDead(gameCharacterResponseDto)).isTrue();
+        assertThat(exception.getMessage()).isEqualTo(ApiErrorCode.GAMECHARACTER_IS_DEAD.getMessage());
+    }
+
+    @DisplayName("캐릭터가 공격 회피")
+    @Test
+    public void GameCharacterAvoidUnderattack() {
+        // given
+        gameCharacter.setAvoidanceRate(100F);   // 회피율 100%
+        GameCharacterResponseDto originalGameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
+        MonsterResponseDto originalMonsterResponseDto = buildMonsterResponseDto(monster);
+        GameCharacterResponseDto reflectedGameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
+        MonsterResponseDto reflectedMonsterResponseDto = buildMonsterResponseDto(monster);
+        FightResponseDto fightResponseDto = new FightResponseDto(originalGameCharacterResponseDto, originalMonsterResponseDto, reflectedGameCharacterResponseDto, reflectedMonsterResponseDto);
+
+        // when
+        FightResponseDto afterFightResponseDto = gameCharacterService.underattack(fightResponseDto);
+
+        // then
+        then(gameCharacterRepository).should(times(0)).save(any(GameCharacter.class));  // 공격을 회피했기 때문에 아무런 save도 일어나지 않음
     }
 
     @DisplayName("캐릭터 레벨업")
     @Test
     public void GameCharacterLevelUp() {
         // given
+        int levelUp = gameCharacter.getLevel() + 1;
+        given(gameCharacterRepository.save(any(GameCharacter.class))).willReturn(gameCharacter);
 
         // when
+        GameCharacter levelUpGameCharacter = gameCharacterService.levelUp(gameCharacter);
 
         // then
-
+        assertThat(levelUpGameCharacter.getLevel()).isEqualTo(levelUp);
     }
 
 
@@ -301,7 +337,7 @@ public class GameCharacterServiceImplTest {
                 .attackPower(10F)
                 .attackSpeed(30F)
                 .defensePower(5F)
-                .avoidanceRate(30F)
+                .avoidanceRate(0F)
                 .characterSpecies(characterSpecies)
                 .gameCharacterSkillList(new ArrayList<>())
                 .weapon(weapon)

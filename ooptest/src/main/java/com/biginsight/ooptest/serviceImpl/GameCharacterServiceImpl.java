@@ -144,6 +144,7 @@ public class GameCharacterServiceImpl implements GameCharacterService {
                 log.info("캐릭터가 공격당하였습니다 ! 받은 데미지 : " + totalDamage + ", 현재 HP : " + reflectedGameCharacterResponseDto.getHp());
             }
         }
+
         gameCharacterRepository.save(originalGameCharacterResponseDto.toEntity());
         fightResponseDto.setOriginalGameCharacterResponseDto(originalGameCharacterResponseDto);
 
