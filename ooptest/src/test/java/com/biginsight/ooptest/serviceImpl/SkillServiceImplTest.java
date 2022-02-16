@@ -2,9 +2,7 @@ package com.biginsight.ooptest.serviceImpl;
 
 import com.biginsight.ooptest.domain.CharacterSpecies;
 import com.biginsight.ooptest.domain.Skill;
-import com.biginsight.ooptest.domain.Weapon;
 import com.biginsight.ooptest.repository.SkillRepository;
-import com.biginsight.ooptest.service.SkillService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -17,7 +15,6 @@ import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -47,7 +44,7 @@ public class SkillServiceImplTest {
         given(skillRepository.save(any(Skill.class))).willReturn(humanSkill);
 
         // when
-        Skill savedSkill = skillService.addSkill(humanSkill);
+        Skill savedSkill = skillService.save(humanSkill);
 
         // then
         then(skillRepository).should(times(1)).save(humanSkill);

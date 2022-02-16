@@ -6,6 +6,7 @@ import com.biginsight.ooptest.domain.Skill;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
+@Repository
 public interface GameCharacterSkillRepository extends JpaRepository<GameCharacterSkill, Long> {
     boolean existsByGameCharacterIdAndSkillId(Long gameCharacterId, Long skillId);
 }

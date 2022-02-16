@@ -1,10 +1,8 @@
 package com.biginsight.ooptest.serviceImpl;
 
 import com.biginsight.ooptest.domain.CharacterSpecies;
-import com.biginsight.ooptest.domain.Skill;
 import com.biginsight.ooptest.domain.Weapon;
 import com.biginsight.ooptest.repository.WeaponRepository;
-import com.biginsight.ooptest.service.WeaponService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -13,11 +11,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
-import java.util.ArrayList;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -46,7 +42,7 @@ public class WeaponServiceImplTest {
         given(weaponRepository.save(any(Weapon.class))).willReturn(humanWeapon);
 
         // when
-        Weapon savedWeapon = weaponService.addWeapon(humanWeapon);
+        Weapon savedWeapon = weaponService.save(humanWeapon);
 
         // then
         then(weaponRepository).should(times(1)).save(humanWeapon);

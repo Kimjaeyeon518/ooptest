@@ -31,7 +31,7 @@ public class MonsterServiceImpl implements MonsterService {
     @Override
     public MonsterResponseDto underattack(Long monsterId, Float underattackPower) {
         Monster findMonster = monsterRepository.findById(monsterId)
-                .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_GAMECHARACTER));
+                .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_MONSTER));
 
         // 몬스터가 반격한 경우
         if(new Random().nextInt(100) < findMonster.getCounterattackRate()){

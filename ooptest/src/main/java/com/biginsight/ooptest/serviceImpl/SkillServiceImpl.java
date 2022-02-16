@@ -18,8 +18,9 @@ import javax.transaction.Transactional;
 public class SkillServiceImpl implements SkillService {
 
     private final SkillRepository skillRepository;
+
     @Override
-    public Skill addSkill(Skill skill) {
+    public Skill save(Skill skill) {
         return skillRepository.save(skill);
     }
 

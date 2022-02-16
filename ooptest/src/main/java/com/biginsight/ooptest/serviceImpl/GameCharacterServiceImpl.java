@@ -1,18 +1,15 @@
 package com.biginsight.ooptest.serviceImpl;
 
-import com.biginsight.ooptest.domain.GameCharacter;
-import com.biginsight.ooptest.domain.GameCharacterSkill;
-import com.biginsight.ooptest.domain.Skill;
-import com.biginsight.ooptest.domain.Weapon;
+import com.biginsight.ooptest.domain.*;
 import com.biginsight.ooptest.dto.response.GameCharacterResponseDto;
 import com.biginsight.ooptest.dto.response.GameCharacterSkillResponseDto;
 import com.biginsight.ooptest.exception.ApiErrorCode;
 import com.biginsight.ooptest.exception.ApiException;
-import com.biginsight.ooptest.repository.GameCharacterRepository;
-import com.biginsight.ooptest.repository.GameCharacterSkillRepository;
-import com.biginsight.ooptest.repository.SkillRepository;
-import com.biginsight.ooptest.repository.WeaponRepository;
+import com.biginsight.ooptest.repository.*;
 import com.biginsight.ooptest.service.GameCharacterService;
+import com.biginsight.ooptest.service.MonsterService;
+import com.biginsight.ooptest.service.SkillService;
+import com.biginsight.ooptest.service.WeaponService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -27,9 +24,11 @@ import java.util.Random;
 public class GameCharacterServiceImpl implements GameCharacterService {
 
     private final GameCharacterRepository gameCharacterRepository;
-    private final WeaponRepository weaponRepository;
-    private final SkillRepository skillRepository;
     private final GameCharacterSkillRepository gameCharacterSkillRepository;
+
+    private final WeaponService weaponService;
+    private final SkillService skillService;
+    private final MonsterService monsterService;
 
 
     @Override
@@ -42,8 +41,7 @@ public class GameCharacterServiceImpl implements GameCharacterService {
         GameCharacter findGameCharacter = gameCharacterRepository.findById(gameCharacterId)
                 .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_GAMECHARACTER));
 
-        Weapon findWeapon = weaponRepository.findById(weaponId)
-                .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_WEAPON));
+        Weapon findWeapon = weaponService.findById(weaponId);
 
         // 캐릭터 종족과 무기 종족이 불일치할 경우
         if(!findGameCharacter.getCharacterSpecies().equals(findWeapon.getCharacterSpecies()))
@@ -53,7 +51,7 @@ public class GameCharacterServiceImpl implements GameCharacterService {
 
         GameCharacter savedGameCharacter = gameCharacterRepository.save(findGameCharacter);
         
-        return returnGameCharacterResponse(savedGameCharacter).wearWeapon(savedGameCharacter.getWeapon());
+        return returnGameCharacterResponse(savedGameCharacter, null, 0);
     }
 
     @Override
@@ -61,22 +59,21 @@ public class GameCharacterServiceImpl implements GameCharacterService {
         GameCharacter findGameCharacter = gameCharacterRepository.findById(gameCharacterId)
                 .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_GAMECHARACTER));
 
-        Skill findSkill = skillRepository.findById(skillId)
-                .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_WEAPON));
+        Skill findSkill = skillService.findById(skillId);
 
         // 캐릭터가 습득한 스킬이 아닐 경우
         if(!gameCharacterSkillRepository.existsByGameCharacterIdAndSkillId(gameCharacterId, skillId))
-            throw new ApiException(ApiErrorCode.CANNOT_FOUND_SKILL);
+            throw new ApiException(ApiErrorCode.CANNOT_FOUND_GAMECHARACTER_SKILL);
 
         // 캐릭터의 마나가 부족할 경우
         if (findGameCharacter.getMp() < findSkill.getRequiredMp())
-            throw new ApiException(ApiErrorCode.NOT_ENOUGH_MP);
+            throw new ApiException(ApiErrorCode.NOT_ENOUGH_SKILL_MP);
 
         findGameCharacter.setMp(findGameCharacter.getMp() - findSkill.getRequiredMp());
 
         GameCharacter savedGameCharacter = gameCharacterRepository.save(findGameCharacter);
 
-        return returnGameCharacterResponse(savedGameCharacter).useSkill(findSkill);
+        return returnGameCharacterResponse(savedGameCharacter, findSkill, 0);
     }
 
     @Override
@@ -84,8 +81,7 @@ public class GameCharacterServiceImpl implements GameCharacterService {
         GameCharacter findGameCharacter = gameCharacterRepository.findById(gameCharacterId)
                 .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_GAMECHARACTER));
 
-        Skill findSkill = skillRepository.findById(skillId)
-                .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_WEAPON));
+        Skill findSkill = skillService.findById(skillId);
 
         // 캐릭터 종족과 스킬 종족이 불일치할 경우
         if (!findGameCharacter.getCharacterSpecies().equals(findSkill.getCharacterSpecies()))
@@ -93,7 +89,7 @@ public class GameCharacterServiceImpl implements GameCharacterService {
 
         // 캐릭터의 레벨이 스킬 사용 제한 레벨보다 낮을 경우
         if (findGameCharacter.getLevel() < findSkill.getRequiredLevel())
-            throw new ApiException(ApiErrorCode.NOT_ENOUGH_LEVEL);
+            throw new ApiException(ApiErrorCode.NOT_ENOUGH_SKILL_LEVEL);
 
         GameCharacterSkill gameCharacterSkill = GameCharacterSkill.builder()
                 .gameCharacter(findGameCharacter)
@@ -107,49 +103,69 @@ public class GameCharacterServiceImpl implements GameCharacterService {
         // 캐릭터 스킬 습득
         GameCharacterSkill savedGameCharacterSkill = gameCharacterSkillRepository.save(gameCharacterSkill);
         gameCharacterRepository.save(findGameCharacter);
-        skillRepository.save(findSkill);
+        skillService.save(findSkill);
 
         return returnGameCharacterSkillResponse(savedGameCharacterSkill);
     }
 
     @Override
-    public GameCharacterResponseDto underattack(Long gameCharacterId, Float underattackPower) {
-        GameCharacter findGameCharacter = gameCharacterRepository.findById(gameCharacterId)
+    public GameCharacterResponseDto underattack(GameCharacterResponseDto gameCharacterResponseDto, Float underattackPower) {
+
+        GameCharacter findGameCharacter = gameCharacterRepository.findById(gameCharacterResponseDto.getId())
                 .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_GAMECHARACTER));
 
         // ex - 회피율이 30% 일 때, 0~100 중 랜덤으로 뽑은 숫자가 30미만일 확률 == 30%
-        if(new Random().nextInt(100) < findGameCharacter.getAvoidanceRate()){
+        if(new Random().nextInt(100) < gameCharacterResponseDto.getAvoidanceRate()){
             log.info("캐릭터가 공격을 회피하였습니다 !");
+            return gameCharacterResponseDto;
         }
         else {
-            Float totalDamage = (underattackPower - findGameCharacter.getDefensePower());
+            Float totalDamage = (underattackPower - gameCharacterResponseDto.getDefensePower());
             // 캐릭터의 방어력이 받은 공격력보다 높을 경우
-            if(totalDamage <= 0)
-                log.info("캐릭터가 공격당하였습니다 ! 최종 데미지 : 0, 현재 HP : " + findGameCharacter.getHp());
+            if(totalDamage <= 0) {
+                log.info("캐릭터의 방어력이 받은 공격력보다 높아서 데미지를 입지 않았습니다 !");
+                return gameCharacterResponseDto;
+            }
+
             else {
-                findGameCharacter.setHp(findGameCharacter.getHp() - totalDamage);
-                log.info("캐릭터가 공격당하였습니다 ! 최종 데미지 : " + totalDamage + ", 현재 HP : " + findGameCharacter.getHp());
+                gameCharacterResponseDto.setHp(gameCharacterResponseDto.getHp() - totalDamage);
+                // 공격으로 인해 캐릭터가 사망했을 경우
+                if(isDead(gameCharacterResponseDto)) {
+                    GameCharacter deadGameCharacter = gameCharacterResponseDto.toEntity();
+                    gameCharacterRepository.save(deadGameCharacter);
+                    throw new ApiException(ApiErrorCode.GAMECHARACTER_IS_DEAD);
+                }
+                log.info("캐릭터가 공격당하였습니다 ! 받은 데미지 : " + totalDamage + ", 현재 HP : " + gameCharacterResponseDto.getHp());
             }
         }
+        GameCharacter savedGameCharacter = gameCharacterRepository.save(gameCharacterResponseDto.toEntity());
 
-        // 캐릭터 HP 상태 체크
-        GameCharacter checkedGameCharacter = checkHp(findGameCharacter);
-
-        GameCharacter savedGameCharacter = gameCharacterRepository.save(checkedGameCharacter);
-
-        return returnGameCharacterResponse(savedGameCharacter);
+        return returnGameCharacterResponse(savedGameCharacter,
+                gameCharacterResponseDto.getSkill(),
+                gameCharacterResponseDto.getSkillExpiredDate());
     }
 
     @Override
-    public GameCharacter checkHp(GameCharacter gameCharacter) {
-        if(gameCharacter.getHp() <= 0) {
-            gameCharacter.setHp(0F);
-            log.info("캐릭터가 죽었습니다.");
+    public Boolean isDead(GameCharacterResponseDto gameCharacterResponseDto) {
+        if(gameCharacterResponseDto.getHp() <= 0) {
+            gameCharacterResponseDto.setHp(0F);
+            return true;
         }
-        return gameCharacter;
+        return false;
     }
 
-    public GameCharacterResponseDto returnGameCharacterResponse(GameCharacter savedGameCharacter) {
+//    @Override
+//    public FightResponseDto gameCharacterAttack(FightResponseDto fightResponseDto) {
+//
+//        GameCharacter findGameCharacter = fightResponseDto.getGameCharacter();
+//
+//        if(findGameCharacter.getSkill)
+//        Float totalAttackPower = fightResponseDto.getGameCharacter().getAttackPower();
+//
+//        monsterService.underattack(findMonster.getId(), findGameCharacter.getAttackPower());
+//    }
+
+    public GameCharacterResponseDto returnGameCharacterResponse(GameCharacter savedGameCharacter, Skill skill, long skillExpiredDate) {
         return GameCharacterResponseDto.builder()
                 .id(savedGameCharacter.getId())
                 .level(savedGameCharacter.getLevel())
@@ -161,6 +177,8 @@ public class GameCharacterServiceImpl implements GameCharacterService {
                 .avoidanceRate(savedGameCharacter.getAvoidanceRate())
                 .characterSpecies(savedGameCharacter.getCharacterSpecies())
                 .weapon(savedGameCharacter.getWeapon())
+                .skill(skill)     // 캐릭터가 현재 사용중인 스킬
+                .skillExpiredDate(skillExpiredDate)   // 캐릭터가 현재 사용중인 스킬의 유효기간
                 .build();
     }
 

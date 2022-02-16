@@ -21,7 +21,7 @@ public class WeaponServiceImpl implements WeaponService {
     private final WeaponRepository weaponRepository;
 
     @Override
-    public Weapon addWeapon(Weapon weapon) {
+    public Weapon save(Weapon weapon) {
         return weaponRepository.save(weapon);
     }
 

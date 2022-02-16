@@ -1,6 +1,7 @@
 package com.biginsight.ooptest.dto.response;
 
 import com.biginsight.ooptest.domain.CharacterSpecies;
+import com.biginsight.ooptest.domain.GameCharacter;
 import com.biginsight.ooptest.domain.Skill;
 import com.biginsight.ooptest.domain.Weapon;
 import lombok.*;
@@ -25,7 +26,23 @@ public class GameCharacterResponseDto {
     private CharacterSpecies characterSpecies;     // 종족
     //    private List<Skill> skillList = new ArrayList();
     private Weapon weapon;
-    private Long duration;   // 지속시간(초)
+    private Skill skill;        // 현재 사용중인 스킬
+    private long skillExpiredDate;   // 스킬 유효기간(초)
+
+    public GameCharacter toEntity() {
+        return GameCharacter.builder()
+                .id(this.id)
+                .level(this.level)
+                .hp(this.hp)
+                .mp(this.mp)
+                .attackPower(this.attackPower)
+                .attackSpeed(this.attackSpeed)
+                .defensePower(this.defensePower)
+                .characterSpecies(this.characterSpecies)
+                .avoidanceRate(this.avoidanceRate)
+                .weapon(this.weapon)
+                .build();
+    }
 
 //    public void attack() {
 //        if(this.weapon != null) {
@@ -47,7 +64,7 @@ public class GameCharacterResponseDto {
         Date date = new Date();
         long unixTime = date.getTime() / 1000L + skill.getDuration();     // 밀리세컨까지는 필요없으므로 1000으로 나눔 + 스킬의 지속시간(초)
 
-        this.setDuration(unixTime);
+        this.setSkillExpiredDate(unixTime);
         return reflectFigure(skillEffect);
     }
 
@@ -115,7 +132,6 @@ public class GameCharacterResponseDto {
                     break;
             }
         }
-
         return this;
     }
 }
