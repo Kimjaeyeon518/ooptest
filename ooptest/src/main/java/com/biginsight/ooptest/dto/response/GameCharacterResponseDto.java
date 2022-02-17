@@ -55,69 +55,74 @@ public class GameCharacterResponseDto {
     }
 
     public GameCharacterResponseDto reflectFigure(String effect) {
-        String[] effectDetail = effect.split(",");    // 효과를 받는 속성 (ex) attackPower, attackSpeed
-        String effectDetailFigure = effectDetail[1].replaceAll("[^+^-^0-9]", "");   // 효과 수치 (ex) +5%, -10 ...
+        String[] effectList = effect.split(";");   // 효과받는 속성이 2가지 일 경우 ';' 로 구분
 
-        if(effectDetail[1].contains("%")) {
-            switch (effectDetail[0]) {
-                case "attackPower":
-                    this.setAttackPower(this.getAttackPower() * (100 + Integer.valueOf(effectDetailFigure)) / 100);
-                    break;
+        for(String effectInfo : effectList) {
+            String[] effectDetail = effectInfo.split(",");    // 효과를 받는 속성 (ex) attackPower, attackSpeed
+            String effectDetailFigure = effectDetail[1].replaceAll("[^+^-^0-9]", "");   // 효과 수치 (ex) +5%, -10 ...
 
-                case "attackSpeed":
-                    this.setAttackSpeed(this.getAttackSpeed() * (100 + Integer.valueOf(effectDetailFigure)) / 100);
-                    break;
+            if(effectDetail[1].contains("%")) {
+                switch (effectDetail[0]) {
+                    case "attackPower":
+                        this.setAttackPower(this.getAttackPower() * (100 + Integer.valueOf(effectDetailFigure)) / 100);
+                        break;
 
-                case "hp":
-                    this.setHp(this.getHp() * (100 + Integer.valueOf(effectDetailFigure)) / 100);
-                    break;
+                    case "attackSpeed":
+                        this.setAttackSpeed(this.getAttackSpeed() * (100 + Integer.valueOf(effectDetailFigure)) / 100);
+                        break;
 
-                case "mp":
-                    this.setMp(this.getMp() * (100 + Integer.valueOf(effectDetailFigure)) / 100);
-                    break;
+                    case "hp":
+                        this.setHp(this.getHp() * (100 + Integer.valueOf(effectDetailFigure)) / 100);
+                        break;
 
-                case "defensePower":
-                    this.setDefensePower(this.getDefensePower() * (100 + Integer.valueOf(effectDetailFigure)) / 100);
-                    break;
+                    case "mp":
+                        this.setMp(this.getMp() * (100 + Integer.valueOf(effectDetailFigure)) / 100);
+                        break;
 
-                case "avoidanceRate":
-                    this.setAvoidanceRate(this.getAvoidanceRate() * (100 + Integer.valueOf(effectDetailFigure)) / 100);
-                    break;
+                    case "defensePower":
+                        this.setDefensePower(this.getDefensePower() * (100 + Integer.valueOf(effectDetailFigure)) / 100);
+                        break;
 
-                default:
-                    break;
+                    case "avoidanceRate":
+                        this.setAvoidanceRate(this.getAvoidanceRate() * (100 + Integer.valueOf(effectDetailFigure)) / 100);
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+            else {
+                switch (effectDetail[0]) {
+                    case "attackPower":
+                        this.setAttackPower(this.getAttackPower() + Integer.valueOf(effectDetailFigure));
+                        break;
+
+                    case "attackSpeed":
+                        this.setAttackSpeed(this.getAttackSpeed() + Integer.valueOf(effectDetailFigure));
+                        break;
+
+                    case "hp":
+                        this.setHp(this.getHp() + Integer.valueOf(effectDetailFigure));
+                        break;
+
+                    case "mp":
+                        this.setMp(this.getMp() + Integer.valueOf(effectDetailFigure));
+                        break;
+
+                    case "defensePower":
+                        this.setDefensePower(this.getDefensePower() + Integer.valueOf(effectDetailFigure));
+                        break;
+
+                    case "avoidanceRate":
+                        this.setAvoidanceRate(this.getAvoidanceRate() + Integer.valueOf(effectDetailFigure));
+                        break;
+
+                    default:
+                        break;
+                }
             }
         }
-        else {
-            switch (effectDetail[0]) {
-                case "attackPower":
-                    this.setAttackPower(this.getAttackPower() + Integer.valueOf(effectDetailFigure));
-                    break;
 
-                case "attackSpeed":
-                    this.setAttackSpeed(this.getAttackSpeed() + Integer.valueOf(effectDetailFigure));
-                    break;
-
-                case "hp":
-                    this.setHp(this.getHp() + Integer.valueOf(effectDetailFigure));
-                    break;
-
-                case "mp":
-                    this.setMp(this.getMp() + Integer.valueOf(effectDetailFigure));
-                    break;
-
-                case "defensePower":
-                    this.setDefensePower(this.getDefensePower() + Integer.valueOf(effectDetailFigure));
-                    break;
-
-                case "avoidanceRate":
-                    this.setAvoidanceRate(this.getAvoidanceRate() + Integer.valueOf(effectDetailFigure));
-                    break;
-
-                default:
-                    break;
-            }
-        }
         return this;
     }
 }
