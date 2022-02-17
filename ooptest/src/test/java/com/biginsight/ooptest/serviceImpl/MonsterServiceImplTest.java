@@ -22,7 +22,6 @@ import java.util.Date;
 import static org.junit.jupiter.api.Assertions.*;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.then;
@@ -60,96 +59,87 @@ public class MonsterServiceImplTest {
         given(monsterRepository.save(any(Monster.class))).willReturn(monster);
 
         // when
-        Monster savedMonster = monsterService.addMonster(monster);
+        Monster savedMonster = monsterService.save(monster);
 
         // then
         then(monsterRepository).should(times(1)).save(monster);
         assertThat(savedMonster).isEqualTo(monster);
     }
 
-    @DisplayName("몬스터가 캐릭터를 공격")
-    @Test
-    public void MonsterAttack() {
-        // given
-        GameCharacterResponseDto originalGameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
-        MonsterResponseDto originalMonsterResponseDto = buildMonsterResponseDto(monster);
-        GameCharacterResponseDto reflectedGameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
-        MonsterResponseDto reflectedMonsterResponseDto = buildMonsterResponseDto(monster);
-        reflectedGameCharacterResponseDto.setHp(50F);
-        FightResponseDto fightResponseDto = new FightResponseDto(originalGameCharacterResponseDto, originalMonsterResponseDto, reflectedGameCharacterResponseDto, reflectedMonsterResponseDto);
-        given(gameCharacterService.underattack(any(FightResponseDto.class))).willReturn(fightResponseDto);
-
-        // when
-        FightResponseDto afterFightResponseDto = monsterService.doAttack(fightResponseDto);
-
-        // then
-        then(gameCharacterService).should(times(1)).underattack(any(FightResponseDto.class));
-        assertThat(afterFightResponseDto.getReflectedGameCharacterResponseDto().getHp()).isEqualTo(afterFightResponseDto.getOriginalGameCharacterResponseDto().getHp() - 50F);
-    }
-
-    @DisplayName("몬스터가 공격받음")
-    @Test
-    public void MonsterUnderattack() {
-        // given
-        monster.setCounterattackRate(0F);
-        GameCharacterResponseDto originalGameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
-        MonsterResponseDto originalMonsterResponseDto = buildMonsterResponseDto(monster);
-        GameCharacterResponseDto reflectedGameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
-        MonsterResponseDto reflectedMonsterResponseDto = buildMonsterResponseDto(monster);
-        FightResponseDto fightResponseDto = new FightResponseDto(originalGameCharacterResponseDto, originalMonsterResponseDto, reflectedGameCharacterResponseDto, reflectedMonsterResponseDto);
-        given(monsterRepository.save(any(Monster.class))).willReturn(monster);
-
-        // when
-        FightResponseDto afterFightResponseDto = monsterService.underattack(fightResponseDto);
-
-        // then
-        then(monsterRepository).should(times(1)).save(any(Monster.class));
-        assertThat(afterFightResponseDto.getReflectedMonsterResponseDto().getHp()).isEqualTo(afterFightResponseDto.getOriginalMonsterResponseDto().getHp() - 5F);
-    }
-
-    @DisplayName("몬스터가 공격받다가 사망(HP <= 0)")
-    @Test
-    public void MonsterIsDead() {
-        // given
-        monster.setCounterattackRate(0F);
-        gameCharacter.setAttackPower(1000F);  // 캐릭터 공격력 1000
-        GameCharacterResponseDto originalGameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
-        MonsterResponseDto originalMonsterResponseDto = buildMonsterResponseDto(monster);
-        GameCharacterResponseDto reflectedGameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
-        MonsterResponseDto reflectedMonsterResponseDto = buildMonsterResponseDto(monster);
-        FightResponseDto fightResponseDto = new FightResponseDto(originalGameCharacterResponseDto, originalMonsterResponseDto, reflectedGameCharacterResponseDto, reflectedMonsterResponseDto);
-        given(monsterRepository.save(any(Monster.class))).willReturn(monster);
-
-        // when
-        ApiException exception = assertThrows(ApiException.class,
-                () -> monsterService.underattack(fightResponseDto));
-
-        // then
-        then(gameCharacterService).should(times(1)).levelUp(any(GameCharacter.class));
-        then(monsterRepository).should(times(1)).save(any(Monster.class));
-        assertThat(exception.getMessage()).isEqualTo(ApiErrorCode.MONSTER_IS_DEAD.getMessage());
-    }
-
-    @DisplayName("몬스터가 반격")
-    @Test
-    public void MonsterCounterAttack() {
-        // given
-        monster.setCounterattackRate(100F); // 반격율 100%
-        gameCharacter.setAvoidanceRate(100F);
-        GameCharacterResponseDto originalGameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
-        MonsterResponseDto originalMonsterResponseDto = buildMonsterResponseDto(monster);
-        GameCharacterResponseDto reflectedGameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
-        MonsterResponseDto reflectedMonsterResponseDto = buildMonsterResponseDto(monster);
-        FightResponseDto fightResponseDto = new FightResponseDto(originalGameCharacterResponseDto, originalMonsterResponseDto, reflectedGameCharacterResponseDto, reflectedMonsterResponseDto);
-
-
-        // when
-        FightResponseDto afterFightResponseDto = monsterService.underattack(fightResponseDto);
-
-        // then
-        then(monsterRepository).should(times(1)).save(any(Monster.class));
-        assertThat(afterFightResponseDto.getReflectedMonsterResponseDto().getHp()).isEqualTo(afterFightResponseDto.getOriginalMonsterResponseDto().getHp() - 5F);
-    }
+//    @DisplayName("몬스터가 캐릭터를 공격")
+//    @Test
+//    public void MonsterAttack() {
+//        // given
+//        GameCharacterResponseDto gameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
+//        MonsterResponseDto monsterResponseDto = buildMonsterResponseDto(monster);
+//        monsterResponseDto.setHp(50F);
+//        FightResponseDto fightResponseDto = new FightResponseDto(gameCharacter, monster, gameCharacterResponseDto, monsterResponseDto);
+//        given(gameCharacterService.underattack(any(FightResponseDto.class))).willReturn(fightResponseDto);
+//
+//        // when
+//        FightResponseDto afterFightResponseDto = monsterService.doAttack(fightResponseDto);
+//
+//        // then
+//        then(gameCharacterService).should(times(1)).underattack(any(FightResponseDto.class));
+//        assertThat(afterFightResponseDto.getGameCharacterResponseDto().getHp()).isEqualTo(afterFightResponseDto.getGameCharacter().getHp() - 50F);
+//    }
+//
+//    @DisplayName("몬스터가 공격받음")
+//    @Test
+//    public void MonsterUnderattack() {
+//        // given
+//        monster.setCounterattackRate(0F);
+//        GameCharacterResponseDto gameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
+//        MonsterResponseDto monsterResponseDto = buildMonsterResponseDto(monster);
+//        FightResponseDto fightResponseDto = new FightResponseDto(gameCharacter, monster, gameCharacterResponseDto, monsterResponseDto);
+//        given(monsterRepository.save(any(Monster.class))).willReturn(monster);
+//
+//        // when
+//        FightResponseDto afterFightResponseDto = monsterService.underattack(fightResponseDto);
+//
+//        // then
+//        then(monsterRepository).should(times(1)).save(any(Monster.class));
+//        assertThat(afterFightResponseDto.getMonsterResponseDto().getHp()).isEqualTo(afterFightResponseDto.getMonster().getHp() - 5F);
+//    }
+//
+//    @DisplayName("몬스터가 공격받다가 사망(HP <= 0)")
+//    @Test
+//    public void MonsterIsDead() {
+//        // given
+//        monster.setCounterattackRate(0F);
+//        gameCharacter.setAttackPower(1000F);  // 캐릭터 공격력 1000
+//        GameCharacterResponseDto gameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
+//        MonsterResponseDto monsterResponseDto = buildMonsterResponseDto(monster);
+//        FightResponseDto fightResponseDto = new FightResponseDto(gameCharacter, monster, gameCharacterResponseDto, monsterResponseDto);
+//        given(monsterRepository.save(any(Monster.class))).willReturn(monster);
+//
+//        // when
+//        ApiException exception = assertThrows(ApiException.class,
+//                () -> monsterService.underattack(fightResponseDto));
+//
+//        // then
+//        then(gameCharacterService).should(times(1)).levelUp(any(GameCharacter.class));
+//        then(monsterRepository).should(times(1)).save(any(Monster.class));
+//        assertThat(exception.getMessage()).isEqualTo(ApiErrorCode.MONSTER_IS_DEAD.getMessage());
+//    }
+//
+//    @DisplayName("몬스터가 반격")
+//    @Test
+//    public void MonsterCounterAttack() {
+//        // given
+//        monster.setCounterattackRate(100F); // 반격율 100%
+//        gameCharacter.setAvoidanceRate(100F);
+//        GameCharacterResponseDto gameCharacterResponseDto = buildGameCharacterResponseDto(gameCharacter, null);
+//        MonsterResponseDto monsterResponseDto = buildMonsterResponseDto(monster);
+//        FightResponseDto fightResponseDto = new FightResponseDto(gameCharacter, monster, gameCharacterResponseDto, monsterResponseDto);
+//
+//        // when
+//        FightResponseDto afterFightResponseDto = monsterService.underattack(fightResponseDto);
+//
+//        // then
+//        then(monsterRepository).should(times(1)).save(any(Monster.class));
+//        assertThat(afterFightResponseDto.getMonsterResponseDto().getHp()).isEqualTo(afterFightResponseDto.getMonster().getHp() - 5F);
+//    }
 
     private GameCharacter buildGameCharacter(Long id, CharacterSpecies characterSpecies, Weapon weapon) {
         return GameCharacter.builder()
@@ -158,7 +148,7 @@ public class MonsterServiceImplTest {
                 .hp(100F)
                 .mp(100F)
                 .attackPower(10F)
-                .attackSpeed(30F)
+                .attackSpeed(30)
                 .defensePower(5F)
                 .avoidanceRate(0F)
                 .characterSpecies(characterSpecies)
@@ -211,37 +201,37 @@ public class MonsterServiceImplTest {
                 .build();
     }
 
-    private MonsterResponseDto buildMonsterResponseDto(Monster monster) {
-        return MonsterResponseDto.builder()
-                .id(monster.getId())
-                .hp(monster.getHp())
-                .attackPower(monster.getAttackPower())
-                .defensePower(monster.getDefensePower())
-                .counterattackRate(monster.getCounterattackRate()) // 반격 확률 Default = 30%
-                .build();
-    }
-
-    private GameCharacterResponseDto buildGameCharacterResponseDto(GameCharacter savedGameCharacter, Skill skill) {
-        long skillExpiredDate = 0;
-
-        if(skill != null) {
-            Date date = new Date();
-            skillExpiredDate = date.getTime() / 1000L + skill.getDuration();     // 밀리세컨까지는 필요없으므로 1000으로 나눔 + 스킬의 지속시간(초)
-        }
-
-        return GameCharacterResponseDto.builder()
-                .id(savedGameCharacter.getId())
-                .level(savedGameCharacter.getLevel())
-                .hp(savedGameCharacter.getHp())
-                .mp(savedGameCharacter.getMp())
-                .attackPower(savedGameCharacter.getAttackPower())
-                .attackSpeed(savedGameCharacter.getAttackSpeed())
-                .defensePower(savedGameCharacter.getDefensePower())
-                .avoidanceRate(savedGameCharacter.getAvoidanceRate())
-                .characterSpecies(savedGameCharacter.getCharacterSpecies())
-                .weapon(savedGameCharacter.getWeapon())
-                .skill(skill)     // 캐릭터가 현재 사용중인 스킬
-                .skillExpiredDate(skillExpiredDate)   // 캐릭터가 현재 사용중인 스킬의 유효기간
-                .build();
-    }
+//    private MonsterResponseDto buildMonsterResponseDto(Monster monster) {
+//        return MonsterResponseDto.builder()
+//                .id(monster.getId())
+//                .hp(monster.getHp())
+//                .attackPower(monster.getAttackPower())
+//                .defensePower(monster.getDefensePower())
+//                .counterattackRate(monster.getCounterattackRate()) // 반격 확률 Default = 30%
+//                .build();
+//    }
+//
+//    private GameCharacterResponseDto buildGameCharacterResponseDto(GameCharacter savedGameCharacter, Skill skill) {
+//        long skillExpiredDate = 0;
+//
+//        if(skill != null) {
+//            Date date = new Date();
+//            skillExpiredDate = date.getTime() / 1000L + skill.getDuration();     // 밀리세컨까지는 필요없으므로 1000으로 나눔 + 스킬의 지속시간(초)
+//        }
+//
+//        return GameCharacterResponseDto.builder()
+//                .id(savedGameCharacter.getId())
+//                .level(savedGameCharacter.getLevel())
+//                .hp(savedGameCharacter.getHp())
+//                .mp(savedGameCharacter.getMp())
+//                .attackPower(savedGameCharacter.getAttackPower())
+//                .attackSpeed(savedGameCharacter.getAttackSpeed())
+//                .defensePower(savedGameCharacter.getDefensePower())
+//                .avoidanceRate(savedGameCharacter.getAvoidanceRate())
+//                .characterSpecies(savedGameCharacter.getCharacterSpecies())
+//                .weapon(savedGameCharacter.getWeapon())
+//                .skill(skill)     // 캐릭터가 현재 사용중인 스킬
+//                .skillExpiredDate(skillExpiredDate)   // 캐릭터가 현재 사용중인 스킬의 유효기간
+//                .build();
+//    }
 }

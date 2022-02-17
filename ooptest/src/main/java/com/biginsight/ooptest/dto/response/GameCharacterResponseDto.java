@@ -20,7 +20,7 @@ public class GameCharacterResponseDto {
     private Float hp;
     private Float mp;
     private Float attackPower; // 공격력
-    private Float attackSpeed; // 공격속도
+    private Integer attackSpeed; // 공격속도
     private Float defensePower; // 방어력
     private Float avoidanceRate; // 회피율 (%)
     private CharacterSpecies characterSpecies;     // 종족
@@ -44,35 +44,19 @@ public class GameCharacterResponseDto {
                 .build();
     }
 
-//    public void attack() {
-//        if(this.weapon != null) {
-//            String[] weaponEffects = weapon.getEffect().split(";");
-//
-//            for(String weaponEffect : weaponEffects) {
-//                reflectFigure(weaponEffect);
-//            }
-//        }
-//    }
-
     public GameCharacterResponseDto reflectWeapon(Weapon weapon) {
         String weaponEffect = weapon.getEffect();
-        System.out.println("weaponEffect = " + weaponEffect);
         return reflectFigure(weaponEffect);
     }
 
     public GameCharacterResponseDto reflectSkill(Skill skill) {
         String skillEffect = skill.getEffect();
-        System.out.println("skillEffect = " + skillEffect);
-
         return reflectFigure(skillEffect);
     }
 
     public GameCharacterResponseDto reflectFigure(String effect) {
-        System.out.println("effect = " + effect);
-        String[] effectDetail = effect.split(",");    // 무기 효과를 받는 속성 (ex) attackPower, attackSpeed
-        String effectDetailFigure = effectDetail[1].replaceAll("[^+^-^0-9]", "");   // 무기 효과 수치 (ex) +5%, -10 ...
-        System.out.println("effectDetail[0] = " + effectDetail[0]);
-        System.out.println("effectDetail[1] = " + effectDetail[1]);
+        String[] effectDetail = effect.split(",");    // 효과를 받는 속성 (ex) attackPower, attackSpeed
+        String effectDetailFigure = effectDetail[1].replaceAll("[^+^-^0-9]", "");   // 효과 수치 (ex) +5%, -10 ...
 
         if(effectDetail[1].contains("%")) {
             switch (effectDetail[0]) {

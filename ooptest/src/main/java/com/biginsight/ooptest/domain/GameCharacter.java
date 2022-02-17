@@ -23,7 +23,7 @@ public class GameCharacter {    // Character 로 사용 시 예약어 충돌 발
     private Float hp;
     private Float mp;
     private Float attackPower; // 공격력
-    private Float attackSpeed; // 공격속도
+    private Integer attackSpeed; // 공격속도
     private Float defensePower; // 방어력
     private Float avoidanceRate; // 회피율 (%)
 

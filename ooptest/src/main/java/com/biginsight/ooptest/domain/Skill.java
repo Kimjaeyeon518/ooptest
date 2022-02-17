@@ -28,6 +28,7 @@ public class Skill {
     private String effect;          // 스킬 효과
     private Long duration;       // 지속 시간(초)
 
+    @Builder.Default
     @OneToMany(mappedBy = "skill")
     private List<GameCharacterSkill> gameCharacterSkillList = new ArrayList<>();
 }

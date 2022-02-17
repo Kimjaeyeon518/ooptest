@@ -70,7 +70,7 @@ public class GameCharacterSkillRepositoryTest {
                 .hp(100F)
                 .mp(100F)
                 .attackPower(10F)
-                .attackSpeed(30F)
+                .attackSpeed(30)
                 .defensePower(5F)
                 .avoidanceRate(30F)
                 .characterSpecies(characterSpecies)

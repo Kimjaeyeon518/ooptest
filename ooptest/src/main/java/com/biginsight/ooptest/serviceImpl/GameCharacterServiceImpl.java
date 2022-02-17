@@ -4,12 +4,10 @@ import com.biginsight.ooptest.domain.*;
 import com.biginsight.ooptest.dto.response.FightResponseDto;
 import com.biginsight.ooptest.dto.response.GameCharacterResponseDto;
 import com.biginsight.ooptest.dto.response.GameCharacterSkillResponseDto;
-import com.biginsight.ooptest.dto.response.MonsterResponseDto;
 import com.biginsight.ooptest.exception.ApiErrorCode;
 import com.biginsight.ooptest.exception.ApiException;
 import com.biginsight.ooptest.repository.*;
 import com.biginsight.ooptest.service.GameCharacterService;
-import com.biginsight.ooptest.service.MonsterService;
 import com.biginsight.ooptest.service.SkillService;
 import com.biginsight.ooptest.service.WeaponService;
 import lombok.RequiredArgsConstructor;
@@ -31,12 +29,20 @@ public class GameCharacterServiceImpl implements GameCharacterService {
 
     private final WeaponService weaponService;
     private final SkillService skillService;
-    private final MonsterService monsterService;
+//    private final MonsterService monsterService;
 
 
     @Override
-    public GameCharacter addGameCharacter(GameCharacter gameCharacter) {
+    public GameCharacter save(GameCharacter gameCharacter) {
         return gameCharacterRepository.save(gameCharacter);
+    }
+
+    @Override
+    public GameCharacter findById(Long gameCharacterId) {
+        GameCharacter findGameCharacter = gameCharacterRepository.findById(gameCharacterId)
+                .orElseThrow(() -> new ApiException(ApiErrorCode.CANNOT_FOUND_GAMECHARACTER));
+
+        return findGameCharacter;
     }
 
     @Override
@@ -117,36 +123,36 @@ public class GameCharacterServiceImpl implements GameCharacterService {
 
     @Override
     public FightResponseDto underattack(FightResponseDto fightResponseDto) {
-        GameCharacterResponseDto originalGameCharacterResponseDto = fightResponseDto.getOriginalGameCharacterResponseDto();
-        GameCharacterResponseDto reflectedGameCharacterResponseDto = fightResponseDto.getReflectedGameCharacterResponseDto();
-
-        // ex - 회피율이 30% 일 때, 0~100 중 랜덤으로 뽑은 숫자가 30미만일 확률 == 30%
-        if(new Random().nextInt(100) < reflectedGameCharacterResponseDto.getAvoidanceRate()){
-            log.info("캐릭터가 공격을 회피하였습니다 !");
-            return fightResponseDto;
-        }
-        else {
-            Float totalDamage = (fightResponseDto.getReflectedMonsterResponseDto().getAttackPower() - reflectedGameCharacterResponseDto.getDefensePower());
-            // 캐릭터의 방어력이 받은 공격력보다 높을 경우
-            if(totalDamage <= 0) {
-                log.info("캐릭터의 방어력이 받은 공격력보다 높아서 데미지를 입지 않았습니다 !");
-                return fightResponseDto;
-            }
-
-            else {
-                reflectedGameCharacterResponseDto.setHp(reflectedGameCharacterResponseDto.getHp() - totalDamage);
-                // 공격으로 인해 캐릭터가 사망했을 경우
-                if(isDead(reflectedGameCharacterResponseDto)) {
-                    GameCharacter deadGameCharacter = originalGameCharacterResponseDto.toEntity();
-                    gameCharacterRepository.save(deadGameCharacter);
-                    throw new ApiException(ApiErrorCode.GAMECHARACTER_IS_DEAD);
-                }
-                log.info("캐릭터가 공격당하였습니다 ! 받은 데미지 : " + totalDamage + ", 현재 HP : " + reflectedGameCharacterResponseDto.getHp());
-            }
-        }
-
-        gameCharacterRepository.save(originalGameCharacterResponseDto.toEntity());
-        fightResponseDto.setOriginalGameCharacterResponseDto(originalGameCharacterResponseDto);
+//        GameCharacterResponseDto originalGameCharacterResponseDto = fightResponseDto.getGameCharacter();
+//        GameCharacterResponseDto reflectedGameCharacterResponseDto = fightResponseDto.getGameCharacterResponseDto();
+//
+//        // ex - 회피율이 30% 일 때, 0~100 중 랜덤으로 뽑은 숫자가 30미만일 확률 == 30%
+//        if(new Random().nextInt(100) < reflectedGameCharacterResponseDto.getAvoidanceRate()){
+//            log.info("캐릭터가 공격을 회피하였습니다 !");
+//            return fightResponseDto;
+//        }
+//        else {
+//            Float totalDamage = (fightResponseDto.getMonsterResponseDto().getAttackPower() - reflectedGameCharacterResponseDto.getDefensePower());
+//            // 캐릭터의 방어력이 받은 공격력보다 높을 경우
+//            if(totalDamage <= 0) {
+//                log.info("캐릭터의 방어력이 받은 공격력보다 높아서 데미지를 입지 않았습니다 !");
+//                return fightResponseDto;
+//            }
+//
+//            else {
+//                reflectedGameCharacterResponseDto.setHp(reflectedGameCharacterResponseDto.getHp() - totalDamage);
+//                // 공격으로 인해 캐릭터가 사망했을 경우
+//                if(isDead(reflectedGameCharacterResponseDto)) {
+//                    GameCharacter deadGameCharacter = originalGameCharacterResponseDto.toEntity();
+//                    gameCharacterRepository.save(deadGameCharacter);
+//                    throw new ApiException(ApiErrorCode.GAMECHARACTER_IS_DEAD);
+//                }
+//                log.info("캐릭터가 공격당하였습니다 ! 받은 데미지 : " + totalDamage + ", 현재 HP : " + reflectedGameCharacterResponseDto.getHp());
+//            }
+//        }
+//
+//        gameCharacterRepository.save(originalGameCharacterResponseDto.toEntity());
+//        fightResponseDto.setGameCharacter(originalGameCharacterResponseDto);
 
         return fightResponseDto;
     }
@@ -163,29 +169,30 @@ public class GameCharacterServiceImpl implements GameCharacterService {
     @Override
     public FightResponseDto doAttack(FightResponseDto fightResponseDto) {
 
-        GameCharacterResponseDto originalGameCharacterResponseDto = fightResponseDto.getOriginalGameCharacterResponseDto();
-        GameCharacterResponseDto reflectedGameCharacterResponseDto = fightResponseDto.getReflectedGameCharacterResponseDto();
+//        GameCharacterResponseDto originalGameCharacterResponseDto = fightResponseDto.getGameCharacter();
+//        GameCharacterResponseDto reflectedGameCharacterResponseDto = fightResponseDto.getGameCharacterResponseDto();
+//
+//        // 스킬 / 무기 효과를 받을 캐릭터 객체
+//        // 무기 효과 받기
+//        reflectedGameCharacterResponseDto.reflectWeapon(originalGameCharacterResponseDto.getWeapon());
+//
+//        // 사용중인 스킬이 있을 경우
+//        if(originalGameCharacterResponseDto.getSkill() != null) {
+//            Date date = new Date();
+//            // 스킬의 유효시간이 지나지 않았을 경우
+//            if(originalGameCharacterResponseDto.getSkillExpiredDate() < date.getTime()) {
+//                log.info("캐릭터가 사용중인 스킬 - {} 의 효과가 적용됩니다.", originalGameCharacterResponseDto.getSkill().getName());
+//                reflectedGameCharacterResponseDto.reflectSkill(originalGameCharacterResponseDto.getSkill());
+//            }
+//            // 스킬의 유효시간이 지났을 경우
+//            else {
+//                log.info("캐릭터가 사용중이던 스킬 - {} 의 지속시간이 종료되었습니다.", originalGameCharacterResponseDto.getSkill().getName());
+//                originalGameCharacterResponseDto.setSkill(null);    // 사용중인 스킬 초기화
+//            }
+//        }
 
-        // 스킬 / 무기 효과를 받을 캐릭터 객체
-        // 무기 효과 받기
-        reflectedGameCharacterResponseDto.reflectWeapon(originalGameCharacterResponseDto.getWeapon());
-
-        // 사용중인 스킬이 있을 경우
-        if(originalGameCharacterResponseDto.getSkill() != null) {
-            Date date = new Date();
-            // 스킬의 유효시간이 지나지 않았을 경우
-            if(originalGameCharacterResponseDto.getSkillExpiredDate() < date.getTime()) {
-                log.info("캐릭터가 사용중인 스킬 - {} 의 효과가 적용됩니다.", originalGameCharacterResponseDto.getSkill().getName());
-                reflectedGameCharacterResponseDto.reflectSkill(originalGameCharacterResponseDto.getSkill());
-            }
-            // 스킬의 유효시간이 지났을 경우
-            else {
-                log.info("캐릭터가 사용중이던 스킬 - {} 의 지속시간이 종료되었습니다.", originalGameCharacterResponseDto.getSkill().getName());
-                originalGameCharacterResponseDto.setSkill(null);    // 사용중인 스킬 초기화
-            }
-        }
-
-        return monsterService.underattack(fightResponseDto);
+//        return monsterService.underattack(fightResponseDto);
+        return null;
     }
 
     public GameCharacterResponseDto returnGameCharacterResponse(GameCharacter savedGameCharacter, Skill skill) {
@@ -194,7 +201,7 @@ public class GameCharacterServiceImpl implements GameCharacterService {
 
         if(skill != null) {
             Date date = new Date();
-            skillExpiredDate = date.getTime() / 1000L + skill.getDuration();     // 밀리세컨까지는 필요없으므로 1000으로 나눔 + 스킬의 지속시간(초)
+            skillExpiredDate = date.getTime() + skill.getDuration() * 1000;     // 밀리세컨까지는 필요없으므로 1000으로 나눔 + 스킬의 지속시간(초)
         }
 
         return GameCharacterResponseDto.builder()

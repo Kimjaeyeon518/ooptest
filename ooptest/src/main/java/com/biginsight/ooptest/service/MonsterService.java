@@ -7,7 +7,7 @@ import com.biginsight.ooptest.dto.response.MonsterResponseDto;
 
 public interface MonsterService {
 
-    Monster addMonster(Monster monster);
+    Monster save(Monster monster);
     Monster findById(Long monsterId);
     FightResponseDto underattack(FightResponseDto fightResponseDto);
     Boolean isDead(MonsterResponseDto monsterResponseDto);

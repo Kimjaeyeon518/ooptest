@@ -8,7 +8,8 @@ import com.biginsight.ooptest.dto.response.MonsterResponseDto;
 
 public interface GameCharacterService {
 
-    GameCharacter addGameCharacter(GameCharacter gameCharacter);
+    GameCharacter save(GameCharacter gameCharacter);
+    GameCharacter findById(Long gameCharacterId);
     GameCharacter wearWeapon(Long gameCharacterId, Long weaponId);
     GameCharacter levelUp(GameCharacter gameCharacter);
     GameCharacterResponseDto useSkill(Long gameCharacterId, Long skillId);
