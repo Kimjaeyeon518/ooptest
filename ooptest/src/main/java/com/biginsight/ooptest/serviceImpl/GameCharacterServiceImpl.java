@@ -53,7 +53,8 @@ public class GameCharacterServiceImpl implements GameCharacterService {
         Weapon findWeapon = weaponService.findById(weaponId);
 
         // 캐릭터 종족과 무기 종족이 불일치할 경우
-        if(!findGameCharacter.getCharacterSpecies().equals(findWeapon.getCharacterSpecies()))
+        if(!findGameCharacter.getCharacterSpecies().equals(findWeapon.getCharacterSpecies())
+                && !(CharacterSpecies.COMMON).equals(findWeapon.getCharacterSpecies()))
             throw new ApiException(ApiErrorCode.INVALID_SPECIES);
 
         findGameCharacter.setWeapon(findWeapon);    // 무기 착용
@@ -97,7 +98,8 @@ public class GameCharacterServiceImpl implements GameCharacterService {
         Skill findSkill = skillService.findById(skillId);
 
         // 캐릭터 종족과 스킬 종족이 불일치할 경우
-        if (!findGameCharacter.getCharacterSpecies().equals(findSkill.getCharacterSpecies()))
+        if (!findGameCharacter.getCharacterSpecies().equals(findSkill.getCharacterSpecies())
+        && !(CharacterSpecies.COMMON).equals(findSkill.getCharacterSpecies()))
             throw new ApiException(ApiErrorCode.INVALID_SPECIES);
 
         // 캐릭터의 레벨이 스킬 사용 제한 레벨보다 낮을 경우

@@ -155,14 +155,14 @@ public class OoptestApplicationTests {
 
 		// 캐릭터가 스킬 습득
 		// 테스트하고 싶은 캐릭터 아이디와 스킬 아이디를 입력해주세요.
-		gameCharacterService.getSkill(1L, 1L);
+		gameCharacterService.getSkill(1L, 2L);
 
 		// 위에서 입력한 스킬 아이디를 찾는 로직
-		Skill foundSkill = skillService.findById(1L);
+		Skill foundSkill = skillService.findById(2L);
 
 		// 캐릭터가 스킬 사용
 		// 테스트하고 싶은 캐릭터 아이디와 스킬 아이디를 입력해주세요. (단, 캐릭터가 습득했던 이력이 있는 스킬)
-		GameCharacterResponseDto useSkillGameCharacterResponseDto = gameCharacterService.useSkill(1L, 1L);
+		GameCharacterResponseDto useSkillGameCharacterResponseDto = gameCharacterService.useSkill(1L, 2L);
 
 		try {
 			for(int i=1; i< 500; i++) {
