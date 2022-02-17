@@ -6,8 +6,7 @@ import com.biginsight.ooptest.dto.response.GameCharacterResponseDto;
 import com.biginsight.ooptest.dto.response.MonsterResponseDto;
 import com.biginsight.ooptest.exception.ApiErrorCode;
 import com.biginsight.ooptest.exception.ApiException;
-import com.biginsight.ooptest.repository.GameCharacterRepository;
-import com.biginsight.ooptest.repository.GameCharacterSkillRepository;
+import com.biginsight.ooptest.repository.*;
 import com.biginsight.ooptest.service.*;
 import com.biginsight.ooptest.serviceImpl.GameCharacterServiceImpl;
 import com.biginsight.ooptest.serviceImpl.MonsterServiceImpl;
@@ -27,6 +26,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
@@ -45,6 +45,14 @@ public class OoptestApplicationTests {
 	@Autowired
 	private SkillService skillService;
 
+	@Autowired
+	private WeaponRepository weaponRepository;
+	@Autowired
+	private SkillRepository skillRepository;
+	@Autowired
+	private GameCharacterRepository gameCharacterRepository;
+	@Autowired
+	private MonsterRepository monsterRepository;
 	private Weapon weapon;
 	private Skill skill;
 	private Monster monster;
@@ -52,27 +60,61 @@ public class OoptestApplicationTests {
 	// 싸움이 끝나면 캐릭터와 몬스터의 HP, MP 초기화
 	@BeforeEach
 	public void initTest() {
-		GameCharacter initGameCharacter = gameCharacterService.findById(1L);
-		initGameCharacter.setHp(200F);
-		initGameCharacter.setMp(100F);
-		gameCharacterService.save(initGameCharacter);
-
-		Monster initMonster = monsterService.findById(1L);
-		initMonster.setHp(300F);
-		monsterService.save(initMonster);
+//		GameCharacter initGameCharacter = gameCharacterService.findById(1L);
+//		initGameCharacter.setHp(200F);
+//		initGameCharacter.setMp(100F);
+//		gameCharacterService.save(initGameCharacter);
+//
+//		Monster initMonster = monsterService.findById(1L);
+//		initMonster.setHp(300F);
+//		monsterService.save(initMonster);
 	}
 
 	@Test
 	@DisplayName("실제 DB를 연동한 테스트를 위한 초기 데이터 INSERT")
 	public void insertTestData() {
-		weapon = buildWeapon(CharacterSpecies.HUMAN);
-		skill = buildSkill(CharacterSpecies.HUMAN, 10F, 10);
-		monster = buildMonster();
-		Monster savedMonster = monsterService.save(monster);
-		Skill savedSkill = skillService.save(skill);
-		Weapon savedWeapon = weaponService.save(weapon);
-		GameCharacter buildCharacter = buildGameCharacter(CharacterSpecies.HUMAN, savedWeapon);
-		GameCharacter savedGameCharacter = gameCharacterService.save(buildCharacter);
+		
+		// 무기 데이터 저장
+		List<Weapon> weaponList = new ArrayList<>();
+		weaponList.add(buildDefaultWeapon());	// default 무기 (맨 손) - 아무 효과 없음
+		weaponList.add(buildWeapon(CharacterSpecies.HUMAN, "Short sword", "attackPower,+5%"));	// 휴먼(검)
+		weaponList.add(buildWeapon(CharacterSpecies.HUMAN, "Long sword", "attackPower,+10%"));	// 휴먼(검)
+		weaponList.add(buildWeapon(CharacterSpecies.ELF, "Short bow", "attackSpeed,+5%"));	// 엘프(활)
+		weaponList.add(buildWeapon(CharacterSpecies.ELF, "Long bow", "attackSpeed,+10%"));	// 엘프(활)
+		weaponList.add(buildWeapon(CharacterSpecies.OAK, "Short Axe", "attackPower,+10%;attackSpeed,-5%"));	// 오크(둔기, 도끼)
+		weaponList.add(buildWeapon(CharacterSpecies.OAK, "Iron Hammer", "attackPower,+20%;attackSpeed,-10%"));	// 오크(둔기, 도끼)
+		weaponRepository.saveAll(weaponList);
+
+		// 스킬 데이터 저장
+		List<Skill> skillList = new ArrayList<>();
+		// 일반 스킬
+		skillList.add(buildSkill(CharacterSpecies.COMMON, "Heal", 20F, 1, "hp,+20", 10000L));	// 공통 스킬 (HP 가 오른다)
+		skillList.add(buildSkill(CharacterSpecies.COMMON, "Steam", 30F, 1, "attackPower,+20%", 10L));	// 공통 스킬 (공격력 20% 상승)
+		skillList.add(buildSkill(CharacterSpecies.HUMAN, "Guard", 40F, 1, "defensePower,+30%", 10L));	// 휴먼 스킬 (방어력 30% 상승)
+		skillList.add(buildSkill(CharacterSpecies.ELF, "Elusion", 40F, 1, "avoidRate,+30%", 10L));	// 엘프 스킬 (회피력 30% 상승)
+		skillList.add(buildSkill(CharacterSpecies.OAK, "Anger", 40F, 1, "attackPower,+50%;defensePower,-10%", 10L));	// 오크 스킬 (공격력 50% 상승, 방어력 10% 하락)
+		// 궁극 스킬
+		skillList.add(buildSkill(CharacterSpecies.HUMAN, "Invincible", 50F, 99, "defensePower,+1000000", 10L));	// 휴먼 궁극 스킬  (10초 동안 무적이 됨.)
+		skillList.add(buildSkill(CharacterSpecies.ELF, "Rapid", 50F, 99, "attackSpeed,+500%", 60L));	// 엘프 궁극 스킬 (1분 동안 공격 속도가 500% 상승 한다.)
+		skillList.add(buildSkill(CharacterSpecies.OAK, "Frenzy", 50F, 99, "attackPower,+500%", 60L));	// 오크 궁극 스킬  (1분 동안 공격력이 500% 상승 한다.)
+		skillRepository.saveAll(skillList);
+
+
+		// 몬스터 데이터 저장
+		List<Monster> gameMonsterList = new ArrayList<>();
+		gameMonsterList.add(buildMonster(300F, 20F, 10F));
+		gameMonsterList.add(buildMonster(500F, 30F, 20F));
+		gameMonsterList.add(buildMonster(1000F, 50F, 40F));
+		monsterRepository.saveAll(gameMonsterList);
+
+
+		// 캐릭터 데이터 저장 ( 모두 초기 능력치는 동일하고, 무기도 다같이 맨손으로 시작 )
+		Weapon defaultWeapon = weaponService.findById(1L);	// 맨손 무기
+		List<GameCharacter> gameCharacterList = new ArrayList<>();
+		gameCharacterList.add(buildGameCharacter(CharacterSpecies.HUMAN, defaultWeapon));
+		gameCharacterList.add(buildGameCharacter(CharacterSpecies.ELF, defaultWeapon));
+		gameCharacterList.add(buildGameCharacter(CharacterSpecies.OAK, defaultWeapon));
+		gameCharacterRepository.saveAll(gameCharacterList);
 	}
 
 	@Test
@@ -181,12 +223,12 @@ public class OoptestApplicationTests {
 
 	private GameCharacter buildGameCharacter(CharacterSpecies characterSpecies, Weapon weapon) {
 		return GameCharacter.builder()
-				.level(30)
-				.hp(100F)
+				.level(1)
+				.hp(200F)
 				.mp(100F)
-				.attackPower(10F)
-				.attackSpeed(30)
-				.defensePower(5F)
+				.attackPower(40F)
+				.attackSpeed(50)
+				.defensePower(10F)
 				.avoidanceRate(20F)
 				.characterSpecies(characterSpecies)
 				.gameCharacterSkillList(new ArrayList<>())
@@ -194,9 +236,7 @@ public class OoptestApplicationTests {
 				.build();
 	}
 
-	private Weapon buildWeapon(CharacterSpecies characterSpecies) {
-		String name = "Short sword";
-		String effect = "attackPower,+5%";
+	private Weapon buildWeapon(CharacterSpecies characterSpecies, String name, String effect) {
 
 		return Weapon.builder()
 				.characterSpecies(characterSpecies)
@@ -205,23 +245,30 @@ public class OoptestApplicationTests {
 				.build();
 	}
 
-	private Skill buildSkill(CharacterSpecies characterSpecies, Float requiredMp, Integer requiredLevel) {
+	private Skill buildSkill(CharacterSpecies characterSpecies, String name, Float requiredMp, Integer requiredLevel, String effect, Long duration) {
 		return Skill.builder()
 				.characterSpecies(characterSpecies)
-				.name("new skill")
+				.name(name)
 				.requiredMp(requiredMp)
 				.requiredLevel(requiredLevel)
 				.gameCharacterSkillList(new ArrayList<>())
-				.effect("attackSpeed,+10")
-				.duration(10L)
+				.effect(effect)
+				.duration(duration)
 				.build();
 	}
 
-	private Monster buildMonster() {
+	private Weapon buildDefaultWeapon() {
+		return Weapon.builder()
+				.characterSpecies(CharacterSpecies.COMMON)
+				.name("맨 손")
+				.effect("")
+				.build();
+	}
+	private Monster buildMonster(Float hp, Float attackPower, Float defensePower) {
 		return Monster.builder()
-				.hp(100F)
-				.attackPower(20F)
-				.defensePower(15F)
+				.hp(hp)
+				.attackPower(attackPower)
+				.defensePower(defensePower)
 				.counterattackRate(30F) // 반격 확률 Default = 30%
 				.build();
 	}
