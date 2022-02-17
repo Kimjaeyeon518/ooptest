@@ -121,7 +121,7 @@ public class OoptestApplicationTests {
 	@DisplayName("캐릭터가 몬스터를 일방적으로 공격 (무기 착용, 스킬 사용 X)")
 	public void fightSimulation() {
 		try {
-			for(int i=1; i< 30; i++) {
+			for(int i=1; i< 300; i++) {
 				GameCharacter foundGameCharacter = gameCharacterService.findById(1L);
 				Monster foundMonster = monsterService.findById(1L);
 
@@ -160,7 +160,7 @@ public class OoptestApplicationTests {
 		GameCharacterResponseDto useSkillGameCharacterResponseDto = gameCharacterService.useSkill(1L, 1L);
 
 		try {
-			for(int i=1; i< 50; i++) {
+			for(int i=1; i< 500; i++) {
 				GameCharacter foundGameCharacter = gameCharacterService.findById(1L);
 				Monster foundMonster = monsterService.findById(1L);
 				MonsterResponseDto monsterResponseDto = buildMonsterResponseDto(foundMonster);
@@ -193,7 +193,7 @@ public class OoptestApplicationTests {
 	@DisplayName("몬스터가 캐릭터를 일방적으로 공격")
 	public void fightSimulation3() {
 		try {
-			for(int i=1; i< 30; i++) {
+			for(int i=1; i< 300; i++) {
 				GameCharacter foundGameCharacter = gameCharacterService.findById(1L);
 				Monster foundMonster = monsterService.findById(1L);
 
